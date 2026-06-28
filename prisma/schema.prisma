@@ -17,14 +17,40 @@ enum Role {
   creator
 }
 
+enum ProductStatus {
+  published
+  draft
+}
+
 model User {
   id           String   @unique @default(uuid()) @db.Uuid
   name         String   @db.VarChar(100)
   email        String   @unique @db.VarChar(255)
   passwordHash String
-  role         Role @default(creator)
+  role         Role     @default(creator)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  products Product[]
+
   @@map("users")
+}
+
+model Product {
+  id         String        @unique @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  name       String
+  shortDesc  String        @db.VarChar(160)
+  fullDesc   String        @db.VarChar(5000)
+  categoryId Int
+  price      Int
+  status     ProductStatus @default(draft)
+  isFeatured Boolean       @default(false)
+  fileKeys   String[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("products")
 }
