@@ -9,6 +9,7 @@ import {
   Delete,
   Req,
   HttpStatus,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -16,6 +17,7 @@ import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 import type { Response, Request } from 'express';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { FileDto } from './dto/file.dto';
+import { UpdateProductDto } from './dto/updateProduct.dto';
 
 @Controller('product')
 export class ProductController {
@@ -54,7 +56,7 @@ export class ProductController {
   ) {
     return await this.productService.createProduct(
       createProductDto,
-      'ebd3484e-221b-4cd4-b1e1-47313673f034',
+      '89090bd4-d9f8-49bd-a461-62e5ea6b1d4a',
     );
   }
 
@@ -69,5 +71,10 @@ export class ProductController {
     return await this.productService.getLastDraft(
       'ebd3484e-221b-4cd4-b1e1-47313673f034',
     );
+  }
+
+  @Put('edit')
+  async update(@Body() body: { updateDto: UpdateProductDto; id: string }) {
+    return this.productService.update(body.updateDto, body.id);
   }
 }

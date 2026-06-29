@@ -14,26 +14,37 @@ import { isAllowedFileType } from './dto/allowed_mime_types';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import { FileDto } from './dto/file.dto';
+import { UpdateProductDto } from './dto/updateProduct.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly s3: S3Service,
     private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
   ) {}
   async findAll() {
     try {
-      const products = await this.prisma.product.findMany({
-        include: {
-          category: true,
-          productFiles: {
-            select: {
-              fileName: true,
-              fileSize: true,
+      const [products, total, published, draft] =
+        await this.prisma.$transaction([
+          this.prisma.product.findMany({
+            include: {
+              category: true,
+              productFiles: {
+                select: {
+                  fileName: true,
+                  fileSize: true,
+                },
+              },
             },
-          },
-        },
-      });
+          }),
+
+          this.prisma.product.count(),
+          this.prisma.product.count({ where: { status: 'published' } }),
+          this.prisma.product.count({ where: { status: 'draft' } }),
+        ]);
+
       if (!products) {
         throw new NotFoundException('User has no products');
       }
@@ -41,9 +52,9 @@ export class ProductService {
         message: 'Success',
         data: products,
         meta: {
-          total: 9,
-          published: 6,
-          draft: 3,
+          total,
+          published,
+          draft,
         },
       };
     } catch (err) {
@@ -118,9 +129,6 @@ export class ProductService {
       });
 
       await this.s3.s3Client.send(command);
-      await this.prisma.productFile.delete({
-        where: { key },
-      });
 
       return { message: 'File deleted successfully' };
     } catch (err) {
@@ -134,7 +142,7 @@ export class ProductService {
   async createProduct(data: CreateProductDto, userId: string) {
     try {
       const { productFileIds } = data;
-      console.log(data.categoryId);
+      const imagePublicUrl = `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${data.imageFileKey}`;
 
       const product = await this.prisma.product.create({
         data: {
@@ -146,13 +154,14 @@ export class ProductService {
           price: data.price,
           status: data.status,
           isFeatured: data.isFeatured,
+          coverImg: imagePublicUrl,
         },
       });
       if (!product) {
         console.error('Create product failed');
       }
 
-      setImmediate(() => {
+      setImmediate(async () => {
         productFileIds.forEach(async (i) => {
           try {
             await this.prisma.productFile.update({
@@ -205,6 +214,23 @@ export class ProductService {
 
     if (!draft) {
       return false;
+    }
+  }
+
+  async update(updateDto: UpdateProductDto, id: string) {
+    try {
+      const product = await this.prisma.product.update({
+        where: { id },
+        data: {
+          ...updateDto,
+        },
+      });
+      return product;
+    } catch (err) {
+      throw new HttpException(
+        'Failed to edit product: ' + err.message,
+        err.status || 500,
+      );
     }
   }
 }

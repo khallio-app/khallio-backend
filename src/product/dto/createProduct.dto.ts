@@ -46,4 +46,8 @@ export class CreateProductDto {
   @Type(() => Array)
   @IsArray()
   productFileIds: string[];
+
+  @IsOptional()
+  @IsString()
+  imageFileKey?: string;
 }

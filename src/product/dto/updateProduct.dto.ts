@@ -1,4 +1,7 @@
 import { CreateProductDto } from './createProduct.dto';
-import { PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { IsString, IsUUID } from 'class-validator';
 
-export class UpdateProductDto extends PartialType(CreateProductDto) {}
+export class UpdateProductDto extends PartialType(
+  OmitType(CreateProductDto, ['productFileIds'] as const),
+) {}
