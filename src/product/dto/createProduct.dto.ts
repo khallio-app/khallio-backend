@@ -43,6 +43,7 @@ export class CreateProductDto {
   @IsBoolean()
   isFeatured?: boolean;
 
+  @Type(() => Array)
   @IsArray()
   productFileIds: string[];
 }

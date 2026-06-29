@@ -22,24 +22,43 @@ export class ProductService {
     private readonly prisma: PrismaService,
   ) {}
   async findAll() {
-    const data = productDB;
-    // return {
-    //   message: 'Successful',
-    //   data,
-    //   meta: { total: 8, published: 6, draft: 2 },
-    // };
-
-    return {
-      message: 'No product found',
-      data: [],
-      meta: {},
-    };
+    try {
+      const products = await this.prisma.product.findMany({
+        include: {
+          category: true,
+          productFiles: {
+            select: {
+              fileName: true,
+              fileSize: true,
+            },
+          },
+        },
+      });
+      if (!products) {
+        throw new NotFoundException('User has no products');
+      }
+      return {
+        message: 'Success',
+        data: products,
+        meta: {
+          total: 9,
+          published: 6,
+          draft: 3,
+        },
+      };
+    } catch (err) {
+      throw new HttpException(
+        'Failed to get products: ' + err.message,
+        err.status || 500,
+      );
+    }
   }
 
   async findOne(productId: string) {
-    const product = productDB.find(
-      (product) => String(product.id) === productId,
-    );
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: { category: true, productFiles: true },
+    });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
@@ -99,6 +118,9 @@ export class ProductService {
       });
 
       await this.s3.s3Client.send(command);
+      await this.prisma.productFile.delete({
+        where: { key },
+      });
 
       return { message: 'File deleted successfully' };
     } catch (err) {
@@ -112,6 +134,7 @@ export class ProductService {
   async createProduct(data: CreateProductDto, userId: string) {
     try {
       const { productFileIds } = data;
+      console.log(data.categoryId);
 
       const product = await this.prisma.product.create({
         data: {

@@ -35,7 +35,6 @@ export class ProductController {
   async getUploadUrl(
     @Body() getUploadUrlDto: GetUploadUrlDto,
     @Res() res: Response,
-    // @Req() req: Request,
   ) {
     const response =
       await this.productService.createPresignedUploadUrl(getUploadUrlDto);
@@ -53,7 +52,6 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
     @Req() req: Request,
   ) {
-    console.log('I got here - product')
     return await this.productService.createProduct(
       createProductDto,
       'ebd3484e-221b-4cd4-b1e1-47313673f034',
@@ -62,7 +60,6 @@ export class ProductController {
 
   @Post('file')
   async saveFile(@Body() fileDto: FileDto) {
-    console.log('I got here - file')
     const response = await this.productService.createProductFile(fileDto);
     return response;
   }
