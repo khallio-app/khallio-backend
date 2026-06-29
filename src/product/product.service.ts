@@ -11,10 +11,16 @@ import { randomUUID } from 'crypto';
 import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { isAllowedFileType } from './dto/allowed_mime_types';
+import { CreateProductDto } from './dto/createProduct.dto';
+import { PrismaService } from 'src/lib/prisma.service';
+import { FileDto } from './dto/file.dto';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly s3: S3Service) {}
+  constructor(
+    private readonly s3: S3Service,
+    private readonly prisma: PrismaService,
+  ) {}
   async findAll() {
     const data = productDB;
     // return {
@@ -71,7 +77,6 @@ export class ProductService {
         expiresIn: 900,
       });
 
-
       return {
         presignedUrl: uploadUrl,
         key: uniqueKey, // Save this reference string in your database later
@@ -101,6 +106,82 @@ export class ProductService {
         'Failed to delete file:' + err.message,
         err.status || 500,
       );
+    }
+  }
+
+  async createProduct(data: CreateProductDto, userId: string) {
+    try {
+      const { productFileIds } = data;
+
+      const product = await this.prisma.product.create({
+        data: {
+          userId,
+          name: data.name,
+          shortDesc: data.shortDesc,
+          fullDesc: data.fullDesc,
+          categoryId: data.categoryId,
+          price: data.price,
+          status: data.status,
+          isFeatured: data.isFeatured,
+        },
+      });
+      if (!product) {
+        console.error('Create product failed');
+      }
+
+      setImmediate(() => {
+        productFileIds.forEach(async (i) => {
+          try {
+            await this.prisma.productFile.update({
+              where: { id: i },
+              data: { productId: product.id },
+            });
+          } catch (err) {
+            console.log(
+              `Failed to update productId on file - ${i}` + err.message,
+              err.status,
+            );
+          }
+        });
+      });
+      return { product };
+    } catch (err) {
+      throw new HttpException(
+        'Error creating Product: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async createProductFile(fileDto: FileDto) {
+    try {
+      const productFile = await this.prisma.productFile.create({
+        data: {
+          ...fileDto,
+        },
+      });
+      return { fileId: productFile.id };
+    } catch (err) {
+      throw new HttpException(
+        'Error creating ProductFile: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async getLastDraft(userId: string) {
+    const draft = await this.prisma.product.findFirst({
+      where: {
+        userId,
+        status: 'draft',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (!draft) {
+      return false;
     }
   }
 }
