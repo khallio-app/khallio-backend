@@ -75,7 +75,6 @@ export class ProductController {
 
   @Put('edit')
   async update(@Body() body: UpdateProductDto) {
-    console.log(body);
     return this.productService.update(body);
   }
 
