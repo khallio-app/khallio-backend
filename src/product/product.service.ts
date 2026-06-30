@@ -217,12 +217,21 @@ export class ProductService {
     }
   }
 
-  async update(updateDto: UpdateProductDto, id: string) {
+  async update(updateDto: UpdateProductDto) {
     try {
+      const coverImg = updateDto.updates.imgFileKey
+        ? `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${updateDto.updates.imgFileKey}`
+        : null;
+
       const product = await this.prisma.product.update({
-        where: { id },
+        where: { id: updateDto.productId },
         data: {
-          ...updateDto,
+          name: updateDto.updates.name,
+          shortDesc: updateDto.updates.shortDesc,
+          fullDesc: updateDto.updates.fullDesc,
+          price: Number(updateDto.updates.price),
+          categoryId: updateDto.updates.categoryId,
+          coverImg,
         },
       });
       return product;
