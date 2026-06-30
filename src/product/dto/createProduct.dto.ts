@@ -13,7 +13,6 @@ import { ProductStatus } from 'generated/prisma/enums';
 export class CreateProductDto {
   @IsOptional()
   @IsString()
-  @MinLength(3)
   @MaxLength(100)
   name?: string;
 

@@ -142,7 +142,9 @@ export class ProductService {
   async createProduct(data: CreateProductDto, userId: string) {
     try {
       const { productFileIds } = data;
-      const imagePublicUrl = `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${data.imageFileKey}`;
+      const imagePublicUrl = data.imageFileKey
+        ? `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${data.imageFileKey}`
+        : null;
 
       const product = await this.prisma.product.create({
         data: {
@@ -238,6 +240,46 @@ export class ProductService {
     } catch (err) {
       throw new HttpException(
         'Failed to edit product: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async delete(productId: string) {
+    try {
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        select: { productFiles: true, coverImg: true },
+      });
+      if (!product) throw new NotFoundException('Product not found');
+
+      const keysToDelete: string[] = [];
+      console.log(keysToDelete);
+      if (product.productFiles.length) {
+        product.productFiles.forEach(async (f) => {
+          keysToDelete.push(f.key);
+        });
+      }
+      if (product.coverImg) {
+        const imgKey = product.coverImg.split('dev/')[1];
+        keysToDelete.push(imgKey);
+      }
+
+      if (keysToDelete.length) {
+        try {
+          await Promise.all(keysToDelete.map((key) => this.deleteFile(key)));
+        } catch (err) {
+          console.error(
+            'Warning: Failed to delete some files from Tigris:',
+            err,
+          );
+        }
+      }
+
+      await this.prisma.product.delete({ where: { id: productId } });
+    } catch (err) {
+      throw new HttpException(
+        'Failed to delete product: ' + err.message,
         err.status || 500,
       );
     }

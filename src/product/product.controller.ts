@@ -56,7 +56,7 @@ export class ProductController {
   ) {
     return await this.productService.createProduct(
       createProductDto,
-      '89090bd4-d9f8-49bd-a461-62e5ea6b1d4a',
+      '435ddd9d-1ca4-4456-88b5-11aa5b755557',
     );
   }
 
@@ -69,7 +69,7 @@ export class ProductController {
   @Get('last-draft')
   async lastDraft(@Req() req: Request) {
     return await this.productService.getLastDraft(
-      'ebd3484e-221b-4cd4-b1e1-47313673f034',
+      '435ddd9d-1ca4-4456-88b5-11aa5b755557',
     );
   }
 
@@ -77,5 +77,11 @@ export class ProductController {
   async update(@Body() body: UpdateProductDto) {
     console.log(body);
     return this.productService.update(body);
+  }
+
+  @Delete('')
+  async delete(@Body() deleteDto: { productId: string }) {
+    await this.productService.delete(deleteDto.productId);
+    return { message: 'Product deleted successfully' };
   }
 }
