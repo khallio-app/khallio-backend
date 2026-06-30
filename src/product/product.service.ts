@@ -221,7 +221,6 @@ export class ProductService {
 
   async update(updateDto: UpdateProductDto) {
     try {
-      console.log(updateDto)
       const coverImg = updateDto.updates.imgFileKey
         ? `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${updateDto.updates.imgFileKey}`
         : null;

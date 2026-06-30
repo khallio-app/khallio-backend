@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
@@ -28,10 +29,12 @@ export class CreateProductDto {
 
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
   categoryId?: number;
 
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
   price?: number;
 
   @IsOptional()
