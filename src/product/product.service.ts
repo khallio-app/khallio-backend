@@ -7,7 +7,7 @@ import {
 import { productDB } from './data';
 import { S3Service } from 'src/lib/s3Client.service';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { randomUUID } from 'crypto';
+import { randomUUID, sign } from 'crypto';
 import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { isAllowedFileType } from './dto/allowed_mime_types';
@@ -16,6 +16,7 @@ import { PrismaService } from 'src/lib/prisma.service';
 import { FileDto } from './dto/file.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { ConfigService } from '@nestjs/config';
+import { SupabaseService } from 'src/lib/supabase.service';
 
 @Injectable()
 export class ProductService {
@@ -23,6 +24,7 @@ export class ProductService {
     private readonly s3: S3Service,
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly supabase: SupabaseService,
   ) {}
   async findAll() {
     try {
@@ -117,6 +119,58 @@ export class ProductService {
     }
   }
 
+  async getImageSignedUrl(fileName: string) {
+    try {
+      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+      if (!bucketName) throw new Error('Bucket name is missing in env');
+
+      const { signedUrl, filePath } = await this.supabase.getSignedUrl(
+        bucketName,
+        fileName,
+      );
+
+      return { signedUrl, filePath };
+    } catch (err) {
+      throw new HttpException(
+        'Failed to get image signedUrl: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async deleteImage({
+    filePath,
+    fileUrl,
+    productId,
+  }: {
+    filePath?: string;
+    fileUrl?: string;
+    productId?: string;
+  }) {
+    try {
+      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+      if (!bucketName) throw new Error('Bucket name is missing in env');
+
+      const path = filePath
+        ? filePath
+        : fileUrl!.split(`/storage/v1/object/public/${bucketName}/`)[1];
+      if (!path) throw new Error('Failed to get path');
+
+      await this.supabase.deleteFile(bucketName, path);
+      if (productId) {
+        await this.prisma.product.update({
+          where: { id: productId },
+          data: { coverImg: null },
+        });
+      }
+    } catch (err) {
+      throw new HttpException(
+        'Failed to delete image: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
   async deleteFile(key: string) {
     try {
       if (!key) {
@@ -142,10 +196,11 @@ export class ProductService {
   async createProduct(data: CreateProductDto, userId: string) {
     try {
       const { productFileIds } = data;
-      const imagePublicUrl = data.imageFileKey
-        ? `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${data.imageFileKey}`
-        : null;
-
+      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+      if (!bucketName) throw new Error('Bucket name is missing in env');
+      const imagePublicUrl = data.imageFilePath
+        ? this.supabase.getPublicUrl(data.imageFilePath, bucketName)
+        : undefined;
       const product = await this.prisma.product.create({
         data: {
           userId,
@@ -171,7 +226,7 @@ export class ProductService {
               data: { productId: product.id },
             });
           } catch (err) {
-            console.log(
+            console.error(
               `Failed to update productId on file - ${i}` + err.message,
               err.status,
             );
@@ -221,9 +276,11 @@ export class ProductService {
 
   async update(updateDto: UpdateProductDto) {
     try {
-      const coverImg = updateDto.updates.imgFileKey
-        ? `https://${this.config.get<string>('TIGRIS_BUCKET_NAME')}.fly.storage.tigris.dev/${updateDto.updates.imgFileKey}`
-        : null;
+      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+      if (!bucketName) throw new Error('Bucket name is missing in env');
+      const coverImg = updateDto.updates.imgFilePath
+        ? this.supabase.getPublicUrl(updateDto.updates.imgFilePath, bucketName)
+        : undefined;
 
       const product = await this.prisma.product.update({
         where: { id: updateDto.productId },
@@ -254,7 +311,6 @@ export class ProductService {
       if (!product) throw new NotFoundException('Product not found');
 
       const keysToDelete: string[] = [];
-      console.log(keysToDelete);
       if (product.productFiles.length) {
         product.productFiles.forEach(async (f) => {
           keysToDelete.push(f.key);

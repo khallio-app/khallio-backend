@@ -51,5 +51,5 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
-  imageFileKey?: string;
+  imageFilePath?: string;
 }

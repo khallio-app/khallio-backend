@@ -83,4 +83,14 @@ export class ProductController {
     await this.productService.delete(deleteDto.productId);
     return { message: 'Product deleted successfully' };
   }
+
+  @Post('image-signedUrl')
+  async imageSignedUrl(@Body() data: { fileName: string }) {
+    return await this.productService.getImageSignedUrl(data.fileName);
+  }
+
+  @Delete('coverImg')
+  async deleteCoverImg(@Body() data: { filePath: string; productId?: string }) {
+    return await this.productService.deleteImage(data);
+  }
 }

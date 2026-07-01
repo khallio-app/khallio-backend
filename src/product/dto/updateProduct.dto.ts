@@ -32,7 +32,7 @@ export class UpdateProductFieldsDto {
 
   @IsOptional()
   @IsString()
-  imgFileKey?: string;
+  imgFilePath?: string;
 }
 
 export class UpdateProductDto {
