@@ -18,20 +18,21 @@ export class AuthService {
   ) {}
   async register(registerDto: RegisterDto) {
     try {
-      let user = await this.prisma.user.findUnique({
+      const duplicateMail = await this.prisma.user.findUnique({
         where: { email: registerDto.email },
+        select: { email: true },
       });
 
-      if (user) {
-        throw new ConflictException('Email already exists');
+      if (duplicateMail) {
+        throw new ConflictException('User already exists');
       }
 
       const passwordHash = await bcrypt.hash(registerDto.password, 10);
 
-      user = await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           name: registerDto.name,
-          email: registerDto.email, 
+          email: registerDto.email,
           passwordHash,
         },
       });
@@ -50,8 +51,11 @@ export class AuthService {
         },
       };
     } catch (err) {
-      throw new HttpException(err.message, err.status || 500);
-      console.error(err)
+      console.error(err);
+      throw new HttpException(
+        'User creation failed:' + err.message,
+        err.status || 500,
+      );
     }
   }
 
