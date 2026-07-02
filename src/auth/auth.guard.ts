@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AUTH_INSTANCE } from './auth.module';
+import { AUTH_INSTANCE } from './auth.constants';
 import type { Auth } from './auth.factory';
 import { fromNodeHeaders } from 'better-auth/node';
 
@@ -15,6 +15,10 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
+    
+    if (req.originalUrl?.startsWith('/api/auth')) {
+      return true;
+    }
 
     const session = await this.auth.api.getSession({
       headers: fromNodeHeaders(req.headers),

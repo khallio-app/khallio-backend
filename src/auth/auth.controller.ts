@@ -8,10 +8,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AUTH_INSTANCE } from './auth.module';
+import { AUTH_INSTANCE } from './auth.constants';
 import type { Auth } from './auth.factory';
 import { toNodeHandler } from 'better-auth/node';
-import { AuthGuard } from './auth.guard';
+
 
 @Controller('api/auth')
 export class AuthController {

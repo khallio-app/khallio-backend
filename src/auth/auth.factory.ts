@@ -1,10 +1,11 @@
+// auth.factory.ts
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaService } from 'src/lib/prisma.service';
 import 'dotenv/config';
 
-export const createAuth = (prisma: PrismaService) =>
-  betterAuth({
+export function createAuth(prisma: PrismaService) {
+  return betterAuth({
     database: prismaAdapter(prisma, {
       provider: 'postgresql',
     }),
@@ -18,5 +19,6 @@ export const createAuth = (prisma: PrismaService) =>
       crossSubDomainCookies: { enabled: true },
     },
   });
+}
 
 export type Auth = ReturnType<typeof createAuth>;
