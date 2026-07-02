@@ -1,28 +1,29 @@
 import {
+  All,
   Controller,
-  Post,
+  Get,
+  Inject,
   Req,
   Res,
-  Body,
-  HttpStatus,
-  HttpCode,
+  UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/registerDto';
-import { LoginDto } from './dto/loginDto';
+import type { Request, Response } from 'express';
+import { AUTH_INSTANCE } from './auth.module';
+import type { Auth } from './auth.factory';
+import { toNodeHandler } from 'better-auth/node';
+import { AuthGuard } from './auth.guard';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private handler: ReturnType<typeof toNodeHandler>;
 
-  @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return await this.authService.register(registerDto);
+  constructor(@Inject(AUTH_INSTANCE) private readonly auth: Auth) {
+    this.handler = toNodeHandler(this.auth);
   }
 
-  @HttpCode(HttpStatus.OK)
-  @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return await this.authService.login(loginDto);
+  @All('*')
+  async handleAuth(@Req() req: Request, @Res() res: Response) {
+    return this.handler(req, res);
   }
+
 }

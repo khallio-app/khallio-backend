@@ -1,3 +1,4 @@
+
 generator client {
   provider     = "prisma-client"
   output       = "../generated/prisma"
@@ -9,22 +10,25 @@ datasource db {
 }
 
 model User {
-  id              String    @id @unique @default(uuid()) @db.Uuid
+  id              String    @id @unique @default(uuid())
   name            String    @db.VarChar(100)
   email           String    @unique @db.VarChar(255)
-  passwordHash    String
   role            Role      @default(creator)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   products        Product[]
-  isEmailVerified Boolean?  @default(false)
+
+  emailVerified Boolean   @default(false)
+  image         String?
+  sessions      Session[]
+  accounts      Account[]
 
   @@map("users")
 }
 
 model Product {
-  id           String        @id @unique @default(uuid()) @db.Uuid
-  userId       String        @db.Uuid
+  id           String        @id @unique @default(uuid())
+  userId       String        
   name         String?
   shortDesc    String?       @db.VarChar(160)
   fullDesc     String?       @db.VarChar(5000)
@@ -43,8 +47,8 @@ model Product {
 }
 
 model ProductFile {
-  id        String   @id @unique @default(uuid()) @db.Uuid
-  productId String?  @db.Uuid
+  id        String   @id  @default(uuid()) 
+  productId String?  
   key       String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,4 +74,52 @@ enum Role {
 enum ProductStatus {
   published
   draft
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String    
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String    
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
