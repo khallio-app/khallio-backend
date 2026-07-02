@@ -4,6 +4,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaService } from 'src/lib/prisma.service';
 import 'dotenv/config';
 
+
 export function createAuth(prisma: PrismaService) {
   return betterAuth({
     database: prismaAdapter(prisma, {
@@ -18,6 +19,7 @@ export function createAuth(prisma: PrismaService) {
     advanced: {
       crossSubDomainCookies: { enabled: true },
     },
+    databaseHooks: {},
   });
 }
 

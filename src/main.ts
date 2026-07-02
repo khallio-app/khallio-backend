@@ -1,17 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import * as express from 'express';
-import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    rawBody: true,
     bodyParser: false,
-  });
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith('/api/auth')) return next();
-    express.json()(req, res, next);
   });
 
   app.enableCors({

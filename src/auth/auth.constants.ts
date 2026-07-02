@@ -1,1 +1,0 @@
-export const AUTH_INSTANCE = 'AUTH_INSTANCE';
