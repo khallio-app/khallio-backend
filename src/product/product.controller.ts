@@ -18,13 +18,14 @@ import type { Response, Request } from 'express';
 import { CreateProductDto } from './dto/createProduct.dto';
 import { FileDto } from './dto/file.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get('')
-  async findAll() {
+  async findAll(@Session() session: UserSession) {
     return await this.productService.findAll();
   }
   @Get(':productId')

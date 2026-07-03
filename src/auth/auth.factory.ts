@@ -18,6 +18,9 @@ export function createAuth(prisma: PrismaService) {
     },
     advanced: {
       crossSubDomainCookies: { enabled: true },
+      database: {
+        generateId: () => crypto.randomUUID(),
+      },
     },
     databaseHooks: {},
   });
