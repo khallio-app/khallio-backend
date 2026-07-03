@@ -6,6 +6,7 @@ import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @AllowAnonymous()
   @Get('')
   async getCategory() {
     return await this.categoryService.getCategory();
