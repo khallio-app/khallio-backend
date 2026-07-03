@@ -6,9 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/lib/prisma.service';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: 'email' }),
-  ],
+  imports: [BullModule.registerQueue({ name: 'email' })],
   providers: [EmailService, EmailProcessor, ConfigService, PrismaService],
+  exports: [EmailService],
 })
 export class EmailModule {}

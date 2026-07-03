@@ -23,11 +23,11 @@ import { EmailService } from './email/email.service';
     PrismaModule,
     AuthModule.forRootAsync({
       isGlobal: true,
-      imports: [PrismaModule],
-      useFactory: (prisma: PrismaService) => ({
-        auth: createAuth(prisma),
+      imports: [PrismaModule, EmailModule],
+      useFactory: (prisma: PrismaService, emailService: EmailService) => ({
+        auth: createAuth(prisma, emailService),
       }),
-      inject: [PrismaService],
+      inject: [PrismaService, EmailService],
     }),
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
@@ -46,6 +46,6 @@ import { EmailService } from './email/email.service';
     EmailModule,
   ],
   controllers: [AppController],
-  providers: [AppService, UserCreateHook, EmailService],
+  providers: [AppService, UserCreateHook],
 })
 export class AppModule {}

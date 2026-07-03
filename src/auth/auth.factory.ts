@@ -1,11 +1,12 @@
-// auth.factory.ts
+import crypto from 'crypto';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { emailOTP } from 'better-auth/plugins';
 import { PrismaService } from 'src/lib/prisma.service';
+import { EmailService } from 'src/email/email.service';
 import 'dotenv/config';
 
-
-export function createAuth(prisma: PrismaService) {
+export function createAuth(prisma: PrismaService, emailService: EmailService) {
   return betterAuth({
     database: prismaAdapter(prisma, {
       provider: 'postgresql',
@@ -16,6 +17,20 @@ export function createAuth(prisma: PrismaService) {
     emailAndPassword: {
       enabled: true,
     },
+    plugins: [
+      emailOTP({
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          await emailService.sendVerificationEmail({
+            email,
+            otp,
+            type,
+          });
+        },
+        sendVerificationOnSignUp: true,
+        otpLength: 6,
+        expiresIn: 900,
+      }),
+    ],
     advanced: {
       crossSubDomainCookies: { enabled: true },
       database: {
