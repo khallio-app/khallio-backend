@@ -21,7 +21,6 @@ model User {
   image         String?
   sessions      Session[]
   accounts      Account[]
-  verification  Verification[]
 
   @@map("users")
 }
@@ -76,10 +75,6 @@ enum ProductStatus {
   draft
 }
 
-enum VerficiationType {
-  email_verification
-  password_reset
-}
 
 model Session {
   id        String   @id @default(uuid()) @db.Uuid
@@ -119,14 +114,12 @@ model Account {
 
 model Verification {
   id        String           @id @default(uuid()) @db.Uuid
-  userId    String           @db.Uuid
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      VerficiationType
+  identifier String
   value     String
   expiresAt DateTime
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  @@index([userId])
+  @@index([identifier])
   @@map("verification")
 }

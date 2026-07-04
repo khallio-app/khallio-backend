@@ -37,6 +37,12 @@ export function createAuth(prisma: PrismaService, emailService: EmailService) {
         generateId: () => crypto.randomUUID(),
       },
     },
+    session: {
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 2,
+      },
+    },
     databaseHooks: {},
   });
 }
