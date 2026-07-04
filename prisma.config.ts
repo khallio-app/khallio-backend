@@ -12,9 +12,10 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: process.env["DATBASE_URL"],
-    // url: 'postgresql://khallio:localdevpassword@localhost:5432/khallio_dev',
+    // url: process.env["DATBASE_URL"],
+    url: 'postgresql://khallio:localdevpassword@localhost:5432/khallio_dev',
   },
 });

@@ -5,6 +5,7 @@ import { emailOTP } from 'better-auth/plugins';
 import { PrismaService } from 'src/lib/prisma.service';
 import { EmailService } from 'src/email/email.service';
 import 'dotenv/config';
+import { winstonInstance } from 'src/lib/logger.service';
 
 export function createAuth(prisma: PrismaService, emailService: EmailService) {
   return betterAuth({
@@ -44,6 +45,31 @@ export function createAuth(prisma: PrismaService, emailService: EmailService) {
       },
     },
     databaseHooks: {},
+    logger: {
+      level: 'info',
+      log: (level, message, ...args) => {
+
+        const meta = args.length
+          ? { metadata: args, context: 'BetterAuth' }
+          : { context: 'BetterAuth' };
+
+        switch (level) {
+          case 'error':
+            winstonInstance.error(message, meta);
+            break;
+          case 'warn':
+            winstonInstance.warn(message, meta);
+            break;
+          case 'debug':
+            winstonInstance.debug(message, meta);
+            break;
+          case 'info':
+          default:
+            winstonInstance.info(message, meta);
+            break;
+        }
+      },
+    },
   });
 }
 
