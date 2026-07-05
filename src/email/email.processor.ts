@@ -3,11 +3,15 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Resend } from 'resend';
 import 'dotenv/config';
 import { ConfigService } from '@nestjs/config';
+import { MyLoggerService } from 'src/lib/logger.service';
 
 @Processor('email', { concurrency: 5 })
 export class EmailProcessor extends WorkerHost {
   resend: any;
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly logger: MyLoggerService,
+  ) {
     super();
     this.resend = new Resend(this.config.get<string>('RESEND_API_KEY'));
   }
@@ -21,12 +25,19 @@ export class EmailProcessor extends WorkerHost {
 
   @OnWorkerEvent('completed')
   onCompleted(job: Job) {
-    console.log(`Job ${job.id} completed`);
+    this.logger.log(
+      `Send emilOtp for  ${job.data.email} completed`,
+      'EMAILQUEUE',
+    );
   }
 
   @OnWorkerEvent('failed')
   onFaild(job: Job) {
-    console.log(`Job ${job.id} failed`);
+    this.logger.error(
+      `Send emilOtp for  ${job.data.email} failed`,
+      '',
+      'EMAILQUEUE',
+    );
   }
 
   private async sendVerificationEmail(data: {
@@ -54,7 +65,8 @@ export class EmailProcessor extends WorkerHost {
       });
 
       if (error) {
-        console.error(error.message);
+        this.logger.error(error.message, '', 'RESEND');
+        throw new Error(error);
       }
 
       return responseData;
