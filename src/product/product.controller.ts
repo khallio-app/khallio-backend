@@ -12,7 +12,6 @@ import {
   Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 import type { Response, Request } from 'express';
 import { CreateProductDto } from './dto/createProduct.dto';
@@ -26,27 +25,36 @@ export class ProductController {
 
   @Get('')
   async findAll(@Session() session: UserSession) {
-    return await this.productService.findAll();
+    return await this.productService.findAll(session.user.id);
   }
   @Get(':productId')
-  async findOne(@Param() param: { productId: string }) {
+  async findOne(
+    @Param() param: { productId: string },
+    @Session() session: UserSession,
+  ) {
     const { productId } = param;
-    return await this.productService.findOne(productId);
+    return await this.productService.findOne(productId, session.user.id);
   }
 
   @Post('upload-url')
   async getUploadUrl(
     @Body() getUploadUrlDto: GetUploadUrlDto,
     @Res() res: Response,
+    @Session() session: UserSession,
   ) {
-    const response =
-      await this.productService.createPresignedUploadUrl(getUploadUrlDto);
+    const response = await this.productService.createPresignedUploadUrl(
+      getUploadUrlDto,
+      session.user.id,
+    );
     res.json({ response });
   }
 
   @Delete('/delete-file')
-  async DeleteBucketLifecycle$(@Body() body: { key: string }) {
-    return await this.productService.deleteFile(body.key);
+  async deleteFile(
+    @Body() body: { key: string },
+    @Session() session: UserSession,
+  ) {
+    return await this.productService.deleteFile(body.key, session.user.id);
   }
 
   @Post('create')
@@ -54,34 +62,44 @@ export class ProductController {
   async createProduct(
     @Body() createProductDto: CreateProductDto,
     @Req() req: Request,
+    @Session() session: UserSession,
   ) {
     return await this.productService.createProduct(
       createProductDto,
-      '435ddd9d-1ca4-4456-88b5-11aa5b755557',
+      session.user.id,
     );
   }
 
   @Post('file')
-  async saveFile(@Body() fileDto: FileDto) {
-    const response = await this.productService.createProductFile(fileDto);
+  async saveFile(@Body() fileDto: FileDto, @Session() session: UserSession) {
+    const response = await this.productService.createProductFile(
+      fileDto,
+      session.user.id,
+    );
     return response;
   }
 
-  @Get('last-draft')
-  async lastDraft(@Req() req: Request) {
-    return await this.productService.getLastDraft(
-      '435ddd9d-1ca4-4456-88b5-11aa5b755557',
-    );
-  }
+  // @Get('last-draft')
+  // async lastDraft(@Req() req: Request) {
+  //   return await this.productService.getLastDraft(
+
+  //   );
+  // }
 
   @Put('edit')
-  async update(@Body() body: UpdateProductDto) {
-    return this.productService.update(body);
+  async update(
+    @Body() body: UpdateProductDto,
+    @Session() session: UserSession,
+  ) {
+    return this.productService.update(body, session.user.id);
   }
 
   @Delete('')
-  async delete(@Body() deleteDto: { productId: string }) {
-    await this.productService.delete(deleteDto.productId);
+  async delete(
+    @Body() deleteDto: { productId: string },
+    @Session() session: UserSession,
+  ) {
+    await this.productService.delete(deleteDto.productId, session.user.id);
     return { message: 'Product deleted successfully' };
   }
 
@@ -91,7 +109,10 @@ export class ProductController {
   }
 
   @Delete('coverImg')
-  async deleteCoverImg(@Body() data: { filePath: string; productId?: string }) {
-    return await this.productService.deleteImage(data);
+  async deleteCoverImg(
+    @Body() data: { filePath: string; productId?: string },
+    @Session() session: UserSession,
+  ) {
+    return await this.productService.deleteImage(data, session.user.id);
   }
 }
