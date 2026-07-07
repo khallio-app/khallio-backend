@@ -19,6 +19,7 @@ import { UpdateProductDto } from './dto/updateProduct.dto';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from 'src/lib/supabase.service';
 import { MyLoggerService } from 'src/lib/logger.service';
+import { DeleteImageDto } from './dto/image.dto';
 
 @Injectable()
 export class ProductService {
@@ -161,21 +162,12 @@ export class ProductService {
     }
   }
 
-  async deleteImage(
-    {
-      filePath,
-      fileUrl,
-      productId,
-    }: {
-      filePath?: string;
-      fileUrl?: string;
-      productId?: string;
-    },
-    userId: string,
-  ) {
+  async deleteImage(deleteImageDto: DeleteImageDto, userId: string) {
     try {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
       if (!bucketName) throw new Error('Bucket name is missing in env');
+
+      const { filePath, fileUrl, productId } = deleteImageDto;
 
       const path = filePath
         ? filePath
@@ -201,7 +193,7 @@ export class ProductService {
         'SUPABASE',
       );
       throw new HttpException(
-        `Failed to delete image by user(${userId}): ` + err.message,
+        `Failed to delete image: ` + err.message,
         err.status || 500,
       );
     }

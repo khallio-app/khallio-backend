@@ -18,6 +18,7 @@ import { CreateProductDto } from './dto/createProduct.dto';
 import { FileDto } from './dto/file.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { DeleteImageDto } from './dto/image.dto';
 
 @Controller('product')
 export class ProductController {
@@ -110,7 +111,7 @@ export class ProductController {
 
   @Delete('coverImg')
   async deleteCoverImg(
-    @Body() data: { filePath: string; productId?: string },
+    @Body() data: DeleteImageDto,
     @Session() session: UserSession,
   ) {
     return await this.productService.deleteImage(data, session.user.id);
