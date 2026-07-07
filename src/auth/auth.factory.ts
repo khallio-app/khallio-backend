@@ -27,7 +27,7 @@ export function createAuth(prisma: PrismaService, emailService: EmailService) {
             type,
           });
         },
-        sendVerificationOnSignUp: true,
+        // sendVerificationOnSignUp: true,
         otpLength: 6,
         expiresIn: 900,
       }),

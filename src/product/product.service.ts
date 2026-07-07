@@ -47,9 +47,9 @@ export class ProductService {
             },
           }),
 
-          this.prisma.product.count(),
-          this.prisma.product.count({ where: { status: 'published' } }),
-          this.prisma.product.count({ where: { status: 'draft' } }),
+          this.prisma.product.count({ where: { userId } }),
+          this.prisma.product.count({ where: { status: 'published', userId } }),
+          this.prisma.product.count({ where: { status: 'draft', userId } }),
         ]);
 
       if (!products) {

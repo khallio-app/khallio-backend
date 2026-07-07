@@ -59,7 +59,7 @@ export class EmailProcessor extends WorkerHost {
     try {
       const { data: responseData, error } = await this.resend.emails.send({
         from: 'Acme <onboarding@resend.dev>',
-        to: [email],
+        to: 'ericodejafidelis@gmail.com',
         subject,
         html,
       });
