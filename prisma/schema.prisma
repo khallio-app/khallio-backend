@@ -33,7 +33,7 @@ model Product {
   fullDesc     String?       @db.VarChar(5000)
   categoryId   Int?
   price        Int?
-  status       ProductStatus @default(draft)
+  status       ProductStatus @default(DRAFT)
   isFeatured   Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -73,8 +73,8 @@ enum Role {
 }
 
 enum ProductStatus {
-  published
-  draft
+  PUBLISHED
+  DRAFT
 }
 
 model Session {
@@ -106,6 +106,8 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
+  failedAttempts        Int       @default(0)
+  lockoutUntil          DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

@@ -48,8 +48,8 @@ export class ProductService {
           }),
 
           this.prisma.product.count({ where: { userId } }),
-          this.prisma.product.count({ where: { status: 'published', userId } }),
-          this.prisma.product.count({ where: { status: 'draft', userId } }),
+          this.prisma.product.count({ where: { status: 'PUBLISHED', userId } }),
+          this.prisma.product.count({ where: { status: 'DRAFT', userId } }),
         ]);
 
       if (!products) {
@@ -147,8 +147,9 @@ export class ProductService {
         bucketName,
         fileName,
       );
+      const publicUrl = this.supabase.getPublicUrl(filePath, bucketName);
 
-      return { signedUrl, filePath };
+      return { signedUrl, filePath, publicUrl };
     } catch (err) {
       this.logger.error(
         `Failed to image_signed_url: ${err.message}`,
@@ -167,19 +168,8 @@ export class ProductService {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
       if (!bucketName) throw new Error('Bucket name is missing in env');
 
-      const { filePath, fileUrl, productId } = deleteImageDto;
-
-      const path = filePath
-        ? filePath
-        : fileUrl!.split(`/storage/v1/object/public/${bucketName}/`)[1];
-      if (!path) {
-        this.logger.error(
-          `Failed to get filePath: ${filePath || fileUrl}`,
-          '',
-          'DELETE_IMAGE',
-        );
-      }
-      await this.supabase.deleteFile(bucketName, path);
+      const { filePath, productId } = deleteImageDto;
+      await this.supabase.deleteFile(bucketName, filePath);
       if (productId) {
         await this.prisma.product.update({
           where: { id: productId, userId },
