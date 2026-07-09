@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
-import { UserCreateHook } from './lib/utils/database-hooks/userCreate.hook';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { createAuth } from './auth/auth.factory';
 import { PrismaService } from './lib/prisma.service';
@@ -46,6 +45,6 @@ import { EmailService } from './email/email.service';
     EmailModule,
   ],
   controllers: [AppController],
-  providers: [AppService, UserCreateHook],
+  providers: [AppService],
 })
 export class AppModule {}
