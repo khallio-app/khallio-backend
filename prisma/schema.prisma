@@ -28,6 +28,7 @@ model User {
 model Product {
   id           String        @id @unique @default(uuid()) @db.Uuid
   userId       String        @db.Uuid
+  publicId     String        @unique @db.VarChar(30)
   name         String?
   shortDesc    String?       @db.VarChar(160)
   fullDesc     String?       @db.VarChar(5000)

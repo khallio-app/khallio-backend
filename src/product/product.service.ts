@@ -20,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from 'src/lib/supabase.service';
 import { MyLoggerService } from 'src/lib/logger.service';
 import { DeleteImageDto } from './dto/image.dto';
+import { generateUniquePublicId } from 'src/lib/utils/nanoid.utils';
 
 @Injectable()
 export class ProductService {
@@ -77,13 +78,31 @@ export class ProductService {
     }
   }
 
-  async findOne(productId: string, userId: string) {
+  async findByProductId(productId: string, userId: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId, userId },
       include: { category: true, productFiles: true },
     });
     if (!product) {
       this.logger.error(`Product ${productId} not found by user(${userId})`);
+      throw new NotFoundException('Product not found');
+    }
+    return product;
+  }
+
+  async findByPublicId(publicId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { publicId, status: 'PUBLISHED' },
+      include: { category: true },
+      omit: {
+        isFeatured: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
+      },
+    });
+    if (!product) {
+      this.logger.error(`Product ${publicId} not found)`, '', 'FIND_BY_PUBLIC_ID');
       throw new NotFoundException('Product not found');
     }
     return product;
@@ -220,9 +239,9 @@ export class ProductService {
     }
   }
 
-  async createProduct(data: CreateProductDto, userId: string) {
+  async createProduct(createProductDto: CreateProductDto, userId: string) {
     try {
-      const { productFileIds } = data;
+      const { productFileIds } = createProductDto;
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
       if (!bucketName) {
         this.logger.error(
@@ -232,25 +251,30 @@ export class ProductService {
         );
         throw new InternalServerErrorException();
       }
-      const imagePublicUrl = data.imageFilePath
-        ? this.supabase.getPublicUrl(data.imageFilePath, bucketName)
+      const imagePublicUrl = createProductDto.imageFilePath
+        ? this.supabase.getPublicUrl(createProductDto.imageFilePath, bucketName)
         : undefined;
-      const product = await this.prisma.product.create({
-        data: {
-          userId,
-          name: data.name,
-          shortDesc: data.shortDesc,
-          fullDesc: data.fullDesc,
-          categoryId: data.categoryId,
-          price: data.price,
-          status: data.status,
-          isFeatured: data.isFeatured,
-          coverImg: imagePublicUrl,
-        },
-      });
+
+      const data = {
+        userId,
+        name: createProductDto.name,
+        shortDesc: createProductDto.shortDesc,
+        fullDesc: createProductDto.fullDesc,
+        categoryId: createProductDto.categoryId,
+        price: createProductDto.price,
+        status: createProductDto.status,
+        isFeatured: createProductDto.isFeatured,
+        coverImg: imagePublicUrl,
+      };
+
+      const product = await generateUniquePublicId(
+        data,
+        this.prisma,
+        this.logger,
+      );
       if (!product) {
         this.logger.error(
-          `Failed to create product by user(${userId}): Product not found`,
+          `Failed to create product by user(${userId})`,
           '',
           'CREATE_PRODUCT',
         );
@@ -372,7 +396,7 @@ export class ProductService {
       });
       if (!product) {
         this.logger.warn(
-          `Product not found by user(${userId})`,
+          `Product not found in user(${userId})`,
           'DELETE_PRODUCT',
         );
         throw new NotFoundException('Product not found');
@@ -383,10 +407,6 @@ export class ProductService {
         product.productFiles.forEach(async (f) => {
           keysToDelete.push(f.key);
         });
-      }
-      if (product.coverImg) {
-        const imgKey = product.coverImg.split('dev/')[1];
-        keysToDelete.push(imgKey);
       }
 
       if (keysToDelete.length) {
