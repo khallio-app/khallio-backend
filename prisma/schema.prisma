@@ -26,22 +26,23 @@ model User {
 }
 
 model Product {
-  id           String        @id @unique @default(uuid()) @db.Uuid
-  userId       String        @db.Uuid
-  publicId     String        @unique @db.VarChar(30)
-  name         String?
-  shortDesc    String?       @db.VarChar(160)
-  fullDesc     String?       @db.VarChar(5000)
-  categoryId   Int?
-  price        Int?
-  status       ProductStatus @default(DRAFT)
-  isFeatured   Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  coverImg     String?
-  productFiles ProductFile[]
-  category     Category?     @relation(fields: [categoryId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
+  id              String        @id @unique @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  publicId        String        @unique @db.VarChar(30)
+  name            String?
+  shortDesc       String?       @db.VarChar(160)
+  fullDesc        String?       @db.VarChar(5000)
+  categoryId      Int?
+  price           Int?
+  discountedPrice Int?
+  status          ProductStatus @default(DRAFT)
+  isFeatured      Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  coverImg        String?
+  productFiles    ProductFile[]
+  category        Category?     @relation(fields: [categoryId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
 
   @@map("products")
 }

@@ -38,6 +38,11 @@ export class CreateProductDto {
   price?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  discountedPrice?: number;
+
+  @IsOptional()
   @IsString()
   status?: ProductStatus;
 

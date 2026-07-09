@@ -21,6 +21,7 @@ import { SupabaseService } from 'src/lib/supabase.service';
 import { MyLoggerService } from 'src/lib/logger.service';
 import { DeleteImageDto } from './dto/image.dto';
 import { generateUniquePublicId } from 'src/lib/utils/nanoid.utils';
+import { ProductStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class ProductService {
@@ -102,7 +103,11 @@ export class ProductService {
       },
     });
     if (!product) {
-      this.logger.error(`Product ${publicId} not found)`, '', 'FIND_BY_PUBLIC_ID');
+      this.logger.error(
+        `Product ${publicId} not found)`,
+        '',
+        'FIND_BY_PUBLIC_ID',
+      );
       throw new NotFoundException('Product not found');
     }
     return product;
@@ -262,6 +267,7 @@ export class ProductService {
         fullDesc: createProductDto.fullDesc,
         categoryId: createProductDto.categoryId,
         price: createProductDto.price,
+        discountedPrice: createProductDto.discountedPrice,
         status: createProductDto.status,
         isFeatured: createProductDto.isFeatured,
         coverImg: imagePublicUrl,
@@ -332,22 +338,6 @@ export class ProductService {
     }
   }
 
-  // async getLastDraft(userId: string) {
-  //   const draft = await this.prisma.product.findFirst({
-  //     where: {
-  //       userId,
-  //       status: 'draft',
-  //     },
-  //     orderBy: {
-  //       createdAt: 'desc',
-  //     },
-  //   });
-
-  //   if (!draft) {
-  //     return false;
-  //   }
-  // }
-
   async update(updateDto: UpdateProductDto, userId: string) {
     try {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
@@ -371,6 +361,8 @@ export class ProductService {
           fullDesc: updateDto.updates.fullDesc,
           categoryId: updateDto.updates.categoryId,
           price: updateDto.updates.price,
+          status: updateDto.updates.status,
+          isFeatured: updateDto.updates.isFeatured,
           coverImg,
         },
       });

@@ -1,11 +1,14 @@
 import {
+  IsBoolean,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ProductStatus } from 'generated/prisma/enums';
 
 export class UpdateProductFieldsDto {
   @IsOptional()
@@ -21,9 +24,24 @@ export class UpdateProductFieldsDto {
   fullDesc?: string;
 
   @IsOptional()
+  @IsString()
+  status?: ProductStatus;
+
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   price?: number;
+
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  discountedPrice?: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -42,4 +60,13 @@ export class UpdateProductDto {
 
   @IsUUID()
   productId: string;
+}
+
+export class ToggleStatusDto {
+  @IsString()
+  @IsNotEmpty()
+  productId: string;
+
+  @IsString()
+  status: ProductStatus;
 }
