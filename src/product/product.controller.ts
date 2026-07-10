@@ -12,21 +12,14 @@ import {
   Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { GetUploadUrlDto } from './dto/get-upload-url.dto';
-import type { Response, Request } from 'express';
+import type {Request } from 'express';
 import { CreateProductDto } from './dto/createProduct.dto';
-import { FileDto } from './dto/file.dto';
-import {
-  ToggleStatusDto,
-  UpdateProductDto,
-} from './dto/updateProduct.dto';
+import {UpdateProductDto } from './dto/updateProduct.dto';
 import {
   AllowAnonymous,
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { DeleteImageDto } from './dto/image.dto';
-import { ProductStatus } from 'generated/prisma/enums';
 
 @Controller('product')
 export class ProductController {
@@ -36,6 +29,7 @@ export class ProductController {
   async findAll(@Session() session: UserSession) {
     return await this.productService.findAll(session.user.id);
   }
+
   @Get(':productId')
   async findByProductId(
     @Param() param: { productId: string },
@@ -55,47 +49,17 @@ export class ProductController {
     return await this.productService.findByPublicId(publicId);
   }
 
-  @Post('upload-url')
-  async getUploadUrl(
-    @Body() getUploadUrlDto: GetUploadUrlDto,
-    @Res() res: Response,
-    @Session() session: UserSession,
-  ) {
-    const response = await this.productService.createPresignedUploadUrl(
-      getUploadUrlDto,
-      session.user.id,
-    );
-    res.json({ response });
-  }
-
-  @Delete('/delete-file')
-  async deleteFile(
-    @Body() body: { key: string },
-    @Session() session: UserSession,
-  ) {
-    return await this.productService.deleteFile(body.key, session.user.id);
-  }
-
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  async createProduct(
+  async create(
     @Body() createProductDto: CreateProductDto,
     @Req() req: Request,
     @Session() session: UserSession,
   ) {
-    return await this.productService.createProduct(
+    return await this.productService.create(
       createProductDto,
       session.user.id,
     );
-  }
-
-  @Post('file')
-  async saveFile(@Body() fileDto: FileDto, @Session() session: UserSession) {
-    const response = await this.productService.createProductFile(
-      fileDto,
-      session.user.id,
-    );
-    return response;
   }
 
   @Put('edit')
@@ -113,18 +77,5 @@ export class ProductController {
   ) {
     await this.productService.delete(deleteDto.productId, session.user.id);
     return { message: 'Product deleted successfully' };
-  }
-
-  @Post('image-signedUrl')
-  async imageSignedUrl(@Body() data: { fileName: string }) {
-    return await this.productService.getImageSignedUrl(data.fileName);
-  }
-
-  @Delete('coverImg')
-  async deleteCoverImg(
-    @Body() data: DeleteImageDto,
-    @Session() session: UserSession,
-  ) {
-    return await this.productService.deleteImage(data, session.user.id);
   }
 }

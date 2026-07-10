@@ -12,6 +12,7 @@ import { EmailModule } from './email/email.module';
 import 'dotenv/config';
 import { BullModule } from '@nestjs/bullmq';
 import { EmailService } from './email/email.service';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { EmailService } from './email/email.service';
     ProductModule,
     CategoryModule,
     EmailModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
