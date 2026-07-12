@@ -9,13 +9,13 @@ datasource db {
 }
 
 model User {
-  id        String    @id @unique @default(uuid()) @db.Uuid
-  name      String    @db.VarChar(100)
-  email     String    @unique @db.VarChar(255)
-  role      Role      @default(creator)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+  id        String     @id @unique @default(uuid()) @db.Uuid
+  name      String     @db.VarChar(100)
+  email     String     @unique @db.VarChar(255)
+  role      Role       @default(creator)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  business  Business[]
 
   emailVerified Boolean   @default(false)
   image         String?
@@ -25,9 +25,31 @@ model User {
   @@map("users")
 }
 
+model Business {
+  id          String   @id @unique @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  slug        String   @unique
+  userId      String   @db.Uuid()
+  description String?  @db.VarChar(400)
+  bannerImg   String?
+  profileImg  String?
+  location    String?
+  socialLinks String[] @default([])
+  followers   Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("business")
+}
+
 model Product {
   id              String        @id @unique @default(uuid()) @db.Uuid
-  userId          String        @db.Uuid
+  businessId      String        @db.Uuid
   publicId        String        @unique @db.VarChar(30)
   name            String?
   shortDesc       String?       @db.VarChar(160)
@@ -42,7 +64,7 @@ model Product {
   coverImg        String?
   productFiles    ProductFile[]
   category        Category?     @relation(fields: [categoryId], references: [id])
-  user            User          @relation(fields: [userId], references: [id])
+  business        Business      @relation(fields: [businessId], references: [id])
 
   @@map("products")
 }

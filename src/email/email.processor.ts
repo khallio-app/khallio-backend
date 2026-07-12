@@ -58,7 +58,7 @@ export class EmailProcessor extends WorkerHost {
 
     try {
       const { data: responseData, error } = await this.resend.emails.send({
-        from: [this.config.get<string>('KHALLIO_SENDER_EMAIL')],
+        from: 'Acme <onboarding@resend.dev>',
         to: [email],
         subject,
         html,

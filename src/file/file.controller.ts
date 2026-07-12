@@ -5,6 +5,7 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { FileDto } from 'src/product/dto/file.dto';
 import { DeleteImageDto } from 'src/product/dto/image.dto';
 import type { Response } from 'express';
+import { CurrentBusiness } from 'src/lib/utils/decorators/currentBusiness.decorator';
 
 @Controller('file')
 export class FileController {
@@ -15,6 +16,7 @@ export class FileController {
     @Body() getUploadUrlDto: GetUploadUrlDto,
     @Res() res: Response,
     @Session() session: UserSession,
+    @CurrentBusiness() businessId: string,
   ) {
     const response = await this.fileService.createPresignedUploadUrl(
       getUploadUrlDto,
@@ -28,7 +30,10 @@ export class FileController {
     @Body() body: { key: string },
     @Session() session: UserSession,
   ) {
-    return await this.fileService.deleteFile(body.key, session.user.id);
+    return await this.fileService.deleteFile(
+      body.key,
+      session.user.id,
+    );
   }
 
   @Post('')
@@ -49,7 +54,12 @@ export class FileController {
   async CoverImg(
     @Body() data: DeleteImageDto,
     @Session() session: UserSession,
+    @CurrentBusiness() businessId: string,
   ) {
-    return await this.fileService.deleteImage(data, session.user.id);
+    return await this.fileService.deleteImage(
+      data,
+      session.user.id,
+      businessId,
+    );
   }
 }

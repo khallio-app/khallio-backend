@@ -96,7 +96,11 @@ export class FileService {
     }
   }
 
-  async deleteImage(deleteImageDto: DeleteImageDto, userId: string) {
+  async deleteImage(
+    deleteImageDto: DeleteImageDto,
+    userId: string,
+    businessId: string,
+  ) {
     try {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
       if (!bucketName) throw new Error('Bucket name is missing in env');
@@ -105,13 +109,13 @@ export class FileService {
       await this.supabase.deleteFile(bucketName, filePath);
       if (productId) {
         await this.prisma.product.update({
-          where: { id: productId, userId },
+          where: { id: productId, businessId },
           data: { coverImg: null },
         });
       }
     } catch (err) {
       this.logger.error(
-        `Failed to delete image: ${err.message} by user(${userId})`,
+        `Failed to delete cover_image on product: ${err.message} by user(${userId})`,
         '',
         'SUPABASE',
       );
@@ -122,7 +126,7 @@ export class FileService {
     }
   }
 
-  async deleteFile(key: string, userId: string) {
+  async deleteFile(key: string, userId: string,) {
     try {
       if (!key) {
         this.logger.warn(
