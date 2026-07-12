@@ -24,17 +24,21 @@ export class ProductService {
   ) {}
   async findAll(userId: string) {
     try {
-      const [products, total, published, draft] =
+      const [products, total, published, featured, draft] =
         await this.prisma.$transaction([
           this.prisma.product.findMany({
             where: { userId },
             include: {
               category: true,
             },
+            orderBy: { createdAt: 'desc' },
           }),
 
           this.prisma.product.count({ where: { userId } }),
           this.prisma.product.count({ where: { status: 'PUBLISHED', userId } }),
+          this.prisma.product.count({
+            where: { isFeatured: true, status: 'PUBLISHED', userId },
+          }),
           this.prisma.product.count({ where: { status: 'DRAFT', userId } }),
         ]);
 
@@ -47,6 +51,7 @@ export class ProductService {
         meta: {
           total,
           published,
+          featured,
           draft,
         },
       };
