@@ -30,12 +30,6 @@ export class ProductService {
             where: { userId },
             include: {
               category: true,
-              productFiles: {
-                select: {
-                  fileName: true,
-                  fileSize: true,
-                },
-              },
             },
           }),
 
@@ -80,6 +74,17 @@ export class ProductService {
     }
     return product;
   }
+  async findFeaturedProduct(userId: string) {
+    const products = await this.prisma.product.findMany({
+      where: { userId, isFeatured: true },
+      include: { category: true },
+    });
+    if (!products) {
+      this.logger.error(`Featured products not found by user(${userId})`);
+      throw new NotFoundException('Products not found');
+    }
+    return products;
+  }
 
   async findByPublicId(publicId: string) {
     const product = await this.prisma.product.findUnique({
@@ -89,7 +94,6 @@ export class ProductService {
         isFeatured: true,
         createdAt: true,
         updatedAt: true,
-        userId: true,
       },
     });
     if (!product) {
@@ -100,7 +104,21 @@ export class ProductService {
       );
       throw new NotFoundException('Product not found');
     }
-    return product;
+
+    const upsells = await this.prisma.product.findMany({
+      where: {
+        userId: product?.userId,
+        status: 'PUBLISHED',
+        publicId: { not: publicId },
+      },
+      select: { coverImg: true, price: true, name: true, publicId: true },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      take: 3,
+    });
+
+    return { product, upsells };
   }
 
   async create(createProductDto: CreateProductDto, userId: string) {

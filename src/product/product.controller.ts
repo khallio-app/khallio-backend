@@ -12,9 +12,9 @@ import {
   Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import type {Request } from 'express';
+import type { Request, Response } from 'express';
 import { CreateProductDto } from './dto/createProduct.dto';
-import {UpdateProductDto } from './dto/updateProduct.dto';
+import { UpdateProductDto } from './dto/updateProduct.dto';
 import {
   AllowAnonymous,
   Session,
@@ -42,11 +42,20 @@ export class ProductController {
     );
   }
 
+  @Get('store/featured')
+  async findFeaturedProduct(@Session() session: UserSession) {
+    return await this.productService.findFeaturedProduct(session.user.id);
+  }
+
   @AllowAnonymous()
   @Get('site/:publicId')
-  async findByPublicId(@Param() param: { publicId: string }) {
+  async findByPublicId(
+    @Param() param: { publicId: string },
+    @Res() res: Response,
+  ) {
     const { publicId } = param;
-    return await this.productService.findByPublicId(publicId);
+    const response = await this.productService.findByPublicId(publicId);
+    res.status(200).json({ response });
   }
 
   @Post('create')
@@ -56,10 +65,7 @@ export class ProductController {
     @Req() req: Request,
     @Session() session: UserSession,
   ) {
-    return await this.productService.create(
-      createProductDto,
-      session.user.id,
-    );
+    return await this.productService.create(createProductDto, session.user.id);
   }
 
   @Put('edit')
