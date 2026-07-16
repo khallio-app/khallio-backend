@@ -90,51 +90,6 @@ async function main() {
     });
     console.log(`✓ ${result.name}`);
   }
-
-  const userId = '6f10ff7c-a022-4037-87bf-7e75fb0dcbf9';
-  const oldUserId = '6f10ff7c-a022-4037-87bf-7e75fb0dcbf0';
-
-  console.log('Cleaning up old seed data...');
-  await prisma.business.deleteMany({
-    where: { userId: oldUserId },
-  });
-  await prisma.user.deleteMany({
-    where: { id: oldUserId },
-  });
-
-  console.log(`Upserting user ${userId}...`);
-  await prisma.user.upsert({
-    where: { id: userId },
-    update: {},
-    create: {
-      id: userId,
-      name: 'Khallio Creator',
-      email: 'creator@khallio.com',
-      emailVerified: true,
-      role: 'creator',
-    },
-  });
-
-  const businessData = {
-    id: 'f3b0c2a1-1234-5678-abcd-ef0123456789',
-    name: 'Khallio Creative Studio',
-    userId: userId,
-    description: 'Beautiful digital templates and premium assets for creators.',
-    bannerImg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe',
-    profileImg: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
-    location: 'San Francisco, CA',
-    socialLinks: ['https://twitter.com/khallio', 'https://instagram.com/khallio'],
-    followers: 1250,
-  };
-
-  console.log(`Upserting business for user ${userId}...`);
-  const businessResult = await prisma.business.upsert({
-    where: { name: businessData.name },
-    update: businessData,
-    create: businessData,
-  });
-  console.log(`✓ Business: ${businessResult.name}`);
-
   console.log('Seeding complete.');
 }
 

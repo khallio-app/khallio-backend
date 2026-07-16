@@ -22,26 +22,26 @@ export class ProductService {
     private readonly logger: MyLoggerService,
     private readonly file: FileService,
   ) {}
-  async findAll(businessId: string) {
+  async findAll(organizationId: string) {
     try {
       const [products, total, published, featured, draft] =
         await this.prisma.$transaction([
           this.prisma.product.findMany({
-            where: { businessId },
+            where: { organizationId },
             include: {
               category: true,
             },
             orderBy: { createdAt: 'desc' },
           }),
 
-          this.prisma.product.count({ where: { businessId } }),
+          this.prisma.product.count({ where: { organizationId } }),
           this.prisma.product.count({
-            where: { status: 'PUBLISHED', businessId },
+            where: { status: 'PUBLISHED', organizationId },
           }),
           this.prisma.product.count({
-            where: { isFeatured: true, status: 'PUBLISHED', businessId },
+            where: { isFeatured: true, status: 'PUBLISHED', organizationId },
           }),
-          this.prisma.product.count({ where: { status: 'DRAFT', businessId } }),
+          this.prisma.product.count({ where: { status: 'DRAFT', organizationId } }),
         ]);
 
       if (!products) {
@@ -70,35 +70,35 @@ export class ProductService {
     }
   }
 
-  async findByProductId(productId: string, businessId: string, userId: string) {
+  async findByProductId(productId: string, organizationId: string, userId: string) {
     const product = await this.prisma.product.findUnique({
-      where: { id: productId, businessId },
+      where: { id: productId, organizationId },
       include: { category: true, productFiles: true },
     });
     if (!product) {
       this.logger.error(
-        `Product ${productId} not found on business(${businessId}) by user(${userId})`,
+        `Product ${productId} not found on business(${organizationId}) by user(${userId})`,
       );
       throw new NotFoundException('Product not found');
     }
     return product;
   }
 
-  async findFeaturedProduct(businessId: string, userId: string) {
+  async findFeaturedProduct(organizationId: string, userId: string) {
     const products = await this.prisma.product.findMany({
-      where: { businessId, isFeatured: true },
+      where: { organizationId, isFeatured: true },
       include: { category: true },
     });
     if (!products) {
       this.logger.error(
-        `Featured products not found on business(${businessId}) by user(${userId})`,
+        `Featured products not found on business(${organizationId}) by user(${userId})`,
       );
       throw new NotFoundException('Products not found');
     }
     return products;
   }
 
-  async findByPublicId(publicId: string, businessId: string) {
+  async findByPublicId(publicId: string, organizationId: string) {
     const product = await this.prisma.product.findUnique({
       where: { publicId, status: 'PUBLISHED' },
       include: { category: true },
@@ -119,7 +119,7 @@ export class ProductService {
 
     const upsells = await this.prisma.product.findMany({
       where: {
-        businessId,
+        organizationId,
         status: 'PUBLISHED',
         publicId: { not: publicId },
       },
@@ -136,7 +136,7 @@ export class ProductService {
   async create(
     createProductDto: CreateProductDto,
     userId: string,
-    businessId: string,
+    organizationId: string,
   ) {
     try {
       const { productFileIds } = createProductDto;
@@ -154,7 +154,7 @@ export class ProductService {
         : undefined;
 
       const data = {
-        businessId,
+        organizationId,
         name: createProductDto.name,
         shortDesc: createProductDto.shortDesc,
         fullDesc: createProductDto.fullDesc,
@@ -173,7 +173,7 @@ export class ProductService {
       );
       if (!product) {
         this.logger.error(
-          `Failed to create product by on business(${businessId}) by user(${userId})`,
+          `Failed to create product by on business(${organizationId}) by user(${userId})`,
           '',
           'CREATE_PRODUCT',
         );
@@ -213,7 +213,7 @@ export class ProductService {
   async update(
     updateDto: UpdateProductDto,
     userId: string,
-    businessId: string,
+    organizationId: string,
   ) {
     try {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
@@ -230,7 +230,7 @@ export class ProductService {
         : undefined;
 
       const product = await this.prisma.product.update({
-        where: { id: updateDto.productId, businessId },
+        where: { id: updateDto.productId, organizationId },
         data: {
           name: updateDto.updates.name,
           shortDesc: updateDto.updates.shortDesc,
@@ -246,7 +246,7 @@ export class ProductService {
       return product;
     } catch (err) {
       this.logger.error(
-        `Failed to edit product on business(${businessId}) by user(${userId}): ` +
+        `Failed to edit product on business(${organizationId}) by user(${userId}): ` +
           err.message,
         '',
         'UPDATE_PRODUCT',
@@ -258,15 +258,15 @@ export class ProductService {
     }
   }
 
-  async delete(productId: string, userId: string, businessId: string) {
+  async delete(productId: string, userId: string, organizationId: string) {
     try {
       const product = await this.prisma.product.findUnique({
-        where: { id: productId, businessId },
+        where: { id: productId, organizationId },
         select: { productFiles: true, coverImg: true },
       });
       if (!product) {
         this.logger.warn(
-          `Product not found on business(${businessId}) by user(${userId})`,
+          `Product not found on business(${organizationId}) by user(${userId})`,
           'DELETE_PRODUCT',
         );
         throw new NotFoundException('Product not found');
@@ -288,7 +288,7 @@ export class ProductService {
       await this.prisma.product.delete({ where: { id: productId } });
     } catch (err) {
       this.logger.error(
-        `Error deleting product on business(${businessId}) by user(${userId}): ` +
+        `Error deleting product on business(${organizationId}) by user(${userId}): ` +
           err.message,
         '',
         'DELETE_PRODUCT',

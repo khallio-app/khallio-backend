@@ -9,47 +9,27 @@ datasource db {
 }
 
 model User {
-  id        String     @id @unique @default(uuid()) @db.Uuid
-  name      String     @db.VarChar(100)
-  email     String     @unique @db.VarChar(255)
-  role      Role       @default(creator)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  business  Business[]
+  id        String   @id @unique @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  role      Role     @default(creator)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   emailVerified Boolean   @default(false)
   image         String?
   sessions      Session[]
   accounts      Account[]
 
+  members     Member[]
+  invitations Invitation[]
+
   @@map("users")
-}
-
-model Business {
-  id          String   @id @unique @default(uuid()) @db.Uuid
-  name        String   @unique @db.VarChar(100)
-  slug        String   @unique
-  userId      String   @db.Uuid()
-  description String?  @db.VarChar(400)
-  bannerImg   String?
-  profileImg  String?
-  location    String?
-  socialLinks String[] @default([])
-  followers   Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  products Product[]
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("business")
 }
 
 model Product {
   id              String        @id @unique @default(uuid()) @db.Uuid
-  businessId      String        @db.Uuid
+  organizationId  String        @db.Uuid
   publicId        String        @unique @db.VarChar(30)
   name            String?
   shortDesc       String?       @db.VarChar(160)
@@ -64,7 +44,7 @@ model Product {
   coverImg        String?
   productFiles    ProductFile[]
   category        Category?     @relation(fields: [categoryId], references: [id])
-  business        Business      @relation(fields: [businessId], references: [id])
+  organization    Organization  @relation(fields: [organizationId], references: [id])
 
   @@map("products")
 }
@@ -112,6 +92,8 @@ model Session {
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  activeOrganizationId String?
+
   @@unique([token])
   @@index([userId])
   @@map("session")
@@ -149,4 +131,56 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Organization {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String
+  logo        String?
+  createdAt   DateTime
+  metadata    String?
+  members     Member[]
+  invitations Invitation[]
+  products    Product[]
+  active      Boolean?     @default(false)
+
+  description String?
+  banner      String?
+  location    String?
+  socialLinks String[] @default([])
+
+  @@unique([slug])
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String       @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String       @db.Uuid
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
 }

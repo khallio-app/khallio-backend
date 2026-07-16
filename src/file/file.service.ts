@@ -99,7 +99,7 @@ export class FileService {
   async deleteImage(
     deleteImageDto: DeleteImageDto,
     userId: string,
-    businessId: string,
+    organizationId: string,
   ) {
     try {
       const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
@@ -109,7 +109,7 @@ export class FileService {
       await this.supabase.deleteFile(bucketName, filePath);
       if (productId) {
         await this.prisma.product.update({
-          where: { id: productId, businessId },
+          where: { id: productId, organizationId },
           data: { coverImg: null },
         });
       }
@@ -126,7 +126,7 @@ export class FileService {
     }
   }
 
-  async deleteFile(key: string, userId: string,) {
+  async deleteFile(key: string, userId: string) {
     try {
       if (!key) {
         this.logger.warn(

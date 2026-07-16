@@ -21,11 +21,8 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { EmailVerifiedGuard } from 'src/lib/utils/guards/emailVerified.guard';
-import { BusinessAccessGuard } from 'src/lib/utils/guards/business.guard';
 import { CurrentBusiness } from 'src/lib/utils/decorators/currentBusiness.decorator';
 
-@UseGuards(EmailVerifiedGuard, BusinessAccessGuard)
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -33,20 +30,6 @@ export class ProductController {
   @Get(':businessName')
   async findAll(@CurrentBusiness() businessId: string) {
     return await this.productService.findAll(businessId);
-  }
-
-  @Get(':businessName/:productId')
-  async findByProductId(
-    @Param() param: { productId: string },
-    @Session() session: UserSession,
-    @CurrentBusiness() businessId: string,
-  ) {
-    const { productId } = param;
-    return await this.productService.findByProductId(
-      productId,
-      businessId,
-      session.user.id,
-    );
   }
 
   @Get(':businessName/featured')
@@ -60,15 +43,33 @@ export class ProductController {
     );
   }
 
+
+@Get(':businessName/:productId')
+  async findByProductId(
+    @Param() param: { productId: string },
+    @Session() session: UserSession,
+    @CurrentBusiness() businessId: string,
+  ) {
+    const { productId } = param;
+    return await this.productService.findByProductId(
+      productId,
+      businessId,
+      session.user.id,
+    );
+  }
+
   @AllowAnonymous()
   @Get(':businessName/:publicId')
   async findByPublicId(
     @Param() param: { publicId: string },
     @Res() res: Response,
-    @CurrentBusiness() businessId:string
+    @CurrentBusiness() businessId: string,
   ) {
     const { publicId } = param;
-    const response = await this.productService.findByPublicId(publicId, businessId);
+    const response = await this.productService.findByPublicId(
+      publicId,
+      businessId,
+    );
     res.status(200).json({ response });
   }
 

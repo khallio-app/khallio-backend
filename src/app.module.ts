@@ -5,15 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { createAuth } from './auth/auth.factory';
-import { PrismaService } from './lib/prisma.service';
 import { PrismaModule } from './lib/prisma.module';
 import { EmailModule } from './email/email.module';
 import 'dotenv/config';
 import { BullModule } from '@nestjs/bullmq';
-import { EmailService } from './email/email.service';
 import { FileModule } from './file/file.module';
-import { BusinessModule } from './business/business.module';
+import { auth } from './lib/utils/auth';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -22,13 +20,13 @@ import { BusinessModule } from './business/business.module';
       isGlobal: true,
     }),
     PrismaModule,
-    AuthModule.forRootAsync({
-      isGlobal: true,
-      imports: [PrismaModule, EmailModule],
-      useFactory: (prisma: PrismaService, emailService: EmailService) => ({
-        auth: createAuth(prisma, emailService),
-      }),
-      inject: [PrismaService, EmailService],
+    AuthModule.forRoot({
+      auth,
+      bodyParser: {
+        json: { limit: '2mb' },
+        urlencoded: { limit: '2mb', extended: true },
+        rawBody: true,
+      },
     }),
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
@@ -46,7 +44,7 @@ import { BusinessModule } from './business/business.module';
     CategoryModule,
     EmailModule,
     FileModule,
-    BusinessModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
