@@ -22,17 +22,20 @@ import {
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
 import { CurrentBusiness } from 'src/lib/utils/decorators/currentBusiness.decorator';
+import { EmailVerifiedGuard } from 'src/lib/utils/guards/emailVerified.guard';
+import { OrganizationAccessGuard } from 'src/lib/utils/guards/organization.guard';
 
+@UseGuards(EmailVerifiedGuard, OrganizationAccessGuard)
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Get(':businessName')
+  @Get(':organizationSlug')
   async findAll(@CurrentBusiness() businessId: string) {
     return await this.productService.findAll(businessId);
   }
 
-  @Get(':businessName/featured')
+  @Get(':organizationSlug/featured')
   async findFeaturedProduct(
     @Session() session: UserSession,
     @CurrentBusiness() businessId: string,
@@ -43,8 +46,7 @@ export class ProductController {
     );
   }
 
-
-@Get(':businessName/:productId')
+  @Get(':organizationSlug/:productId')
   async findByProductId(
     @Param() param: { productId: string },
     @Session() session: UserSession,
@@ -59,7 +61,7 @@ export class ProductController {
   }
 
   @AllowAnonymous()
-  @Get(':businessName/:publicId')
+  @Get(':organizationSlug/:publicId')
   async findByPublicId(
     @Param() param: { publicId: string },
     @Res() res: Response,
@@ -73,7 +75,7 @@ export class ProductController {
     res.status(200).json({ response });
   }
 
-  @Post(':businessName/create')
+  @Post(':organizationSlug/create')
   @HttpCode(HttpStatus.OK)
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -87,7 +89,7 @@ export class ProductController {
     );
   }
 
-  @Put(':businessName/edit')
+  @Put(':organizationSlug/edit')
   async update(
     @Body() body: UpdateProductDto,
     @Session() session: UserSession,
@@ -96,7 +98,7 @@ export class ProductController {
     return this.productService.update(body, session.user.id, businessId);
   }
 
-  @Delete(':businessName')
+  @Delete(':organizationSlug')
   async delete(
     @Body() deleteDto: { productId: string },
     @Session() session: UserSession,

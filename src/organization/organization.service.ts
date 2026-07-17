@@ -3,6 +3,8 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import { MyLoggerService } from 'src/lib/logger.service';
+import { auth } from 'src/lib/utils/auth';
+import { UserSession } from '@thallesp/nestjs-better-auth';
 
 @Injectable()
 export class OrganizationService {
@@ -21,7 +23,6 @@ export class OrganizationService {
             },
           },
         },
-        orderBy: { active: 'desc' },
       });
 
       return ownedOrgs;
@@ -38,58 +39,20 @@ export class OrganizationService {
     }
   }
 
-  async getActiveOrg(userId: string) {
+  async getActiveOrg(session: UserSession, req: Request) {
     try {
-      const activeOrg = await this.prisma.organization.findFirst({
-        where: {
-          members: {
-            some: { userId, role: 'owner' },
-          },
-          active: true,
-        },
+      const activeOrg = await auth.api.getFullOrganization({
+        query: { organizationId: session.session.activeOrganizationId },
+        headers: req.headers,
       });
 
       if (!activeOrg) return null;
       return activeOrg;
     } catch (error) {
       this.logger.warn(
-        `User(${userId}) has no active organizations: ` + error.message,
+        `User(${session.user.id}) has no active organizations: ` +
+          error.message,
         'GET_ACTIVE_ORGANIZATIONS',
-      );
-    }
-  }
-
-  async activateOrg(userId: string, orgId: string) {
-    try {
-      (await this.prisma.organization.updateMany({
-        where: {
-          members: {
-            some: { userId, role: 'owner' },
-          },
-          active: true,
-        },
-        data: { active: false },
-      }),
-        await this.prisma.organization.updateMany({
-          where: {
-            id: orgId,
-            members: {
-              some: { userId, role: 'owner' },
-            },
-          },
-          data: { active: true },
-        }));
-
-      return { success: true };
-    } catch (error) {
-      this.logger.error(
-        `Failed to activateOrg(${orgId}) by user(${userId}): ` + error.message,
-        '',
-        'ACTIVATE_ORG',
-      );
-      throw new HttpException(
-        `Failed to activateOrg(${orgId}) by user(${userId}): ` + error.message,
-        error.status || 500,
       );
     }
   }

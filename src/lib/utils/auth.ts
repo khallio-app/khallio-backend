@@ -47,31 +47,6 @@ export const auth = betterAuth({
       allowUserToCreateOrganization: async (user) => {
         return user.emailVerified === true;
       },
-      databaseHooks: {
-        member: {
-          create: {
-            after: async (member) => {
-              if (member.role === 'owner') {
-                await prisma.organization.updateMany({
-                  where: {
-                    id: { not: member.organizationId },
-                    members: {
-                      some: {
-                        userId: member.userId,
-                        role: 'owner',
-                      },
-                    },
-                  },
-                  data: {
-                    active: false,
-                  },
-                });
-              }
-            },
-          },
-        },
-      },
-
       schema: {
         organization: {
           additionalFields: {

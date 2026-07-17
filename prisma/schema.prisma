@@ -143,7 +143,6 @@ model Organization {
   members     Member[]
   invitations Invitation[]
   products    Product[]
-  active      Boolean?     @default(false)
 
   description String?
   banner      String?
