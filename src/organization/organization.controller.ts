@@ -21,7 +21,6 @@ import { AllowPublic } from 'src/lib/utils/decorators/allowPublic.decorator';
 @Controller('organization')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
-
   @Get('owned')
   async ownedOrg(@Session() session: UserSession) {
     return await this.organizationService.getOwnedOrg(session.user.id);
