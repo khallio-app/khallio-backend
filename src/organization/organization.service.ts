@@ -56,4 +56,34 @@ export class OrganizationService {
       );
     }
   }
+
+  async isUserOrgOwner(session: UserSession) {
+    try {
+      const owner = await this.prisma.organization.findFirst({
+        where: {
+          id: session.session.activeOrganizationId,
+          members: {
+            some: {
+              userId: session.user.id,
+              role: 'owner',
+            },
+          },
+        },
+      });
+      if (!owner) return { isOwner: false };
+      return { isOwner: true };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching organization(${session.session.activeOrganizationId}) owner: ` +
+          error.message,
+        '',
+        'GET_ORG_OWNER',
+      );
+      throw new HttpException(
+        `Error fetching organization(${session.session.activeOrganizationId}) owner: ` +
+          error.message,
+        error.status || 500,
+      );
+    }
+  }
 }

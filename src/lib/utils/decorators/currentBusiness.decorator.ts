@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const CurrentBusiness = createParamDecorator(
+export const CurrentOrg = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
-    return ctx.switchToHttp().getRequest().businessId;
+    return ctx.switchToHttp().getRequest().orgId;
   },
 );

@@ -50,11 +50,6 @@ export const auth = betterAuth({
       schema: {
         organization: {
           additionalFields: {
-            active: {
-              type: 'boolean',
-              required: false,
-              defaultValue: true,
-            },
             description: {
               type: 'string',
               required: false,

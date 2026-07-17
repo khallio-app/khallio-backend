@@ -41,7 +41,9 @@ export class ProductService {
           this.prisma.product.count({
             where: { isFeatured: true, status: 'PUBLISHED', organizationId },
           }),
-          this.prisma.product.count({ where: { status: 'DRAFT', organizationId } }),
+          this.prisma.product.count({
+            where: { status: 'DRAFT', organizationId },
+          }),
         ]);
 
       if (!products) {
@@ -70,7 +72,11 @@ export class ProductService {
     }
   }
 
-  async findByProductId(productId: string, organizationId: string, userId: string) {
+  async findByProductId(
+    productId: string,
+    organizationId: string,
+    userId: string,
+  ) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId, organizationId },
       include: { category: true, productFiles: true },
@@ -98,7 +104,7 @@ export class ProductService {
     return products;
   }
 
-  async findByPublicId(publicId: string, organizationId: string) {
+  async findByPublicId(publicId: string) {
     const product = await this.prisma.product.findUnique({
       where: { publicId, status: 'PUBLISHED' },
       include: { category: true },
@@ -119,7 +125,7 @@ export class ProductService {
 
     const upsells = await this.prisma.product.findMany({
       where: {
-        organizationId,
+        organizationId: product.organizationId,
         status: 'PUBLISHED',
         publicId: { not: publicId },
       },

@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
-import { AuthModule } from '@thallesp/nestjs-better-auth';
+import { AuthGuard, AuthModule } from '@thallesp/nestjs-better-auth';
 import { PrismaModule } from './lib/prisma.module';
 import { EmailModule } from './email/email.module';
 import 'dotenv/config';
@@ -12,6 +12,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { FileModule } from './file/file.module';
 import { auth } from './lib/utils/auth';
 import { OrganizationModule } from './organization/organization.module';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import { EmailVerifiedGuard } from './lib/utils/guards/emailVerified.guard';
+import { AllowPublic } from './lib/utils/decorators/allowPublic.decorator';
+import { OrganizationAccessGuard } from './lib/utils/guards/organization.guard';
 
 @Module({
   imports: [
@@ -47,6 +51,12 @@ import { OrganizationModule } from './organization/organization.module';
     OrganizationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    Reflector,
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: EmailVerifiedGuard },
+    { provide: APP_GUARD, useClass: OrganizationAccessGuard },
+  ],
 })
 export class AppModule {}

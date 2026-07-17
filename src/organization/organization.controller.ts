@@ -30,4 +30,9 @@ export class OrganizationController {
     //cache response
     return await this.organizationService.getActiveOrg(session, req);
   }
+
+  @Get('isOwner')
+  async isUserOrgOwner(@Session() session:UserSession){
+    return await this.organizationService.isUserOrgOwner(session)
+  }
 }
