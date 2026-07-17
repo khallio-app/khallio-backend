@@ -15,7 +15,9 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import type { Response } from 'express';
+import { AllowPublic } from 'src/lib/utils/decorators/allowPublic.decorator';
 
+@AllowPublic()
 @Controller('organization')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
@@ -32,7 +34,7 @@ export class OrganizationController {
   }
 
   @Get('isOwner')
-  async isUserOrgOwner(@Session() session:UserSession){
-    return await this.organizationService.isUserOrgOwner(session)
+  async isUserOrgOwner(@Session() session: UserSession) {
+    return await this.organizationService.isUserOrgOwner(session);
   }
 }
