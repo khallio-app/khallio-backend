@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { PrismaClient } from 'generated/prisma/client';
+import { Member, PrismaClient } from 'generated/prisma/client';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -9,34 +9,9 @@ import { z } from 'zod';
 import { winstonInstance } from '../logger.service';
 import * as crypto from 'crypto';
 
-const basePrisma = new PrismaClient({
+const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
-
-const prisma = basePrisma.$extends({
-  query: {
-    member: {
-      async create({ args, query }) {
-        if (args.data.role === 'owner') {
-          await basePrisma.organization.updateMany({
-            where: {
-              members: {
-                some: {
-                  userId: args.data.userId as string,
-                  role: 'owner',
-                },
-              },
-            },
-            data: {
-              active: false,
-            },
-          });
-        }
-        return query(args);
-      },
-    },
-  },
-}) as unknown as PrismaClient;
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
@@ -72,6 +47,31 @@ export const auth = betterAuth({
       allowUserToCreateOrganization: async (user) => {
         return user.emailVerified === true;
       },
+      databaseHooks: {
+        member: {
+          create: {
+            after: async (member) => {
+              if (member.role === 'owner') {
+                await prisma.organization.updateMany({
+                  where: {
+                    id: { not: member.organizationId },
+                    members: {
+                      some: {
+                        userId: member.userId,
+                        role: 'owner',
+                      },
+                    },
+                  },
+                  data: {
+                    active: false,
+                  },
+                });
+              }
+            },
+          },
+        },
+      },
+
       schema: {
         organization: {
           additionalFields: {
@@ -112,11 +112,12 @@ export const auth = betterAuth({
       },
     }),
   ],
+
   advanced: {
     crossSubDomainCookies: { enabled: true },
+    crossOrigin: true,
     database: { generateId: () => crypto.randomUUID() },
   },
-
   session: {
     cookieCache: { enabled: true, maxAge: 50 },
   },
