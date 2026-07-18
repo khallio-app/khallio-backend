@@ -29,10 +29,7 @@ export class FileController {
     @Body() body: { key: string },
     @Session() session: UserSession,
   ) {
-    return await this.fileService.deleteFile(
-      body.key,
-      session.user.id,
-    );
+    return await this.fileService.deleteFile(body.key, session.user.id);
   }
 
   @Post('')
@@ -44,7 +41,7 @@ export class FileController {
     return response;
   }
 
-  @Post('image-signedUrl')
+  @Post(':organizationSlug/image-signedUrl')
   async imageSignedUrl(@Body() data: { fileName: string }) {
     return await this.fileService.getImageSignedUrl(data.fileName);
   }
@@ -55,10 +52,6 @@ export class FileController {
     @Session() session: UserSession,
     @CurrentOrg() orgId: string,
   ) {
-    return await this.fileService.deleteImage(
-      data,
-      session.user.id,
-      orgId,
-    );
+    return await this.fileService.deleteImage(data, session.user.id, orgId);
   }
 }

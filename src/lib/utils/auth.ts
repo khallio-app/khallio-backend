@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { Member, PrismaClient } from 'generated/prisma/client';
+import { PrismaClient } from 'generated/prisma/client';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { PrismaPg } from '@prisma/adapter-pg';
