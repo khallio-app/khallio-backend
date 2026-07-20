@@ -10,7 +10,10 @@ import { SupabaseService } from 'src/lib/supabase.service';
 import { isAllowedFileType } from 'src/product/dto/allowed_mime_types';
 import { FileDto } from 'src/product/dto/file.dto';
 import { GetUploadUrlDto } from 'src/product/dto/get-upload-url.dto';
-import { DeleteImageDto } from 'src/product/dto/image.dto';
+import {
+  DeleteOrgImageDto,
+  DeleteProductImageDto,
+} from 'src/product/dto/image.dto';
 
 @Injectable()
 export class FileService {
@@ -71,56 +74,41 @@ export class FileService {
     }
   }
 
-  async getImageSignedUrl(fileName: string) {
+  async getImageSignedUrl(fileName: string, table: string) {
     try {
-      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
-      if (!bucketName) throw new Error('Bucket name is missing in env');
+      let bucketName: string | undefined = undefined;
+      switch (table) {
+        case 'product':
+          bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+          break;
+        case 'organization':
+          bucketName = this.config.get<string>('ORG_IMAGE_BUCKET_NAME');
+          break;
 
+        default:
+          this.logger.warn(
+            'Bad Request: Invalid table name',
+            'GET_IMAGE_SIGNED_URL',
+          );
+          throw new BadRequestException('Invalid table name ');
+      }
+
+      if (!bucketName) throw new Error('Bucket name is missing in env');
       const { signedUrl, filePath } = await this.supabase.getSignedUrl(
         bucketName,
         fileName,
       );
-      const publicUrl = this.supabase.getPublicUrl(filePath, bucketName);
 
+      const publicUrl = this.supabase.getPublicUrl(filePath, bucketName);
       return { signedUrl, filePath, publicUrl };
     } catch (err) {
       this.logger.error(
-        `Failed to image_signed_url: ${err.message}`,
+        `Failed to get image_signed_url: ${err.message}`,
         '',
         'SUPABASE',
       );
       throw new HttpException(
         'Failed to get image signedUrl: ' + err.message,
-        err.status || 500,
-      );
-    }
-  }
-
-  async deleteImage(
-    deleteImageDto: DeleteImageDto,
-    userId: string,
-    organizationId: string,
-  ) {
-    try {
-      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
-      if (!bucketName) throw new Error('Bucket name is missing in env');
-
-      const { filePath, productId } = deleteImageDto;
-      await this.supabase.deleteFile(bucketName, filePath);
-      if (productId) {
-        await this.prisma.product.update({
-          where: { id: productId, organizationId },
-          data: { coverImg: null },
-        });
-      }
-    } catch (err) {
-      this.logger.error(
-        `Failed to delete cover_image on product: ${err.message} by user(${userId})`,
-        '',
-        'SUPABASE',
-      );
-      throw new HttpException(
-        `Failed to delete image: ` + err.message,
         err.status || 500,
       );
     }
@@ -173,6 +161,81 @@ export class FileService {
       );
       throw new HttpException(
         'Error creating ProductFile: ' + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async deleteProductImage(
+    deleteImageDto: DeleteProductImageDto,
+    userId: string,
+    organizationId: string,
+  ) {
+    try {
+      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
+      if (!bucketName) throw new Error('Product Bucket name is missing in env');
+
+      const { path, id } = deleteImageDto;
+      await this.supabase.deleteFile(bucketName, path);
+      if (id) {
+        await this.prisma.product.update({
+          where: { id, organizationId },
+          data: { coverImg: null },
+        });
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to delete cover_image on product: ${err.message} by user(${userId})`,
+        '',
+        'SUPABASE',
+      );
+      throw new HttpException(
+        `Failed to delete image: ` + err.message,
+        err.status || 500,
+      );
+    }
+  }
+
+  async deleteOrgImage(
+    deleteImageDto: DeleteOrgImageDto,
+    userId: string,
+    orgId: string,
+  ) {
+    try {
+      const bucketName = this.config.get<string>('ORG_IMAGE_BUCKET_NAME');
+      if (!bucketName)
+        throw new Error('Organization Bucket name is missing in env');
+
+      const { path, column } = deleteImageDto;
+      await this.supabase.deleteFile(bucketName, path);
+
+      switch (column) {
+        case 'banner':
+          await this.prisma.organization.update({
+            where: { id: orgId },
+            data: { banner: null },
+          });
+
+          break;
+        case 'logo':
+          await this.prisma.organization.update({
+            where: { id: orgId },
+            data: { logo: null },
+          });
+
+          break;
+
+        default:
+          break;
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to delete cover_image on product: ${err.message} by user(${userId})`,
+        '',
+        'SUPABASE',
+      );
+      throw new HttpException(
+        `Failed to delete image: ` + err.message,
         err.status || 500,
       );
     }

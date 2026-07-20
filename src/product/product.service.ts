@@ -155,9 +155,6 @@ export class ProductService {
         );
         throw new InternalServerErrorException();
       }
-      const imagePublicUrl = createProductDto.imageFilePath
-        ? this.supabase.getPublicUrl(createProductDto.imageFilePath, bucketName)
-        : undefined;
 
       const data = {
         organizationId,
@@ -169,7 +166,7 @@ export class ProductService {
         discountedPrice: createProductDto.discountedPrice,
         status: createProductDto.status,
         isFeatured: createProductDto.isFeatured,
-        coverImg: imagePublicUrl,
+        coverImg: createProductDto.imgUrl,
       };
 
       const product = await generateUniquePublicId(
@@ -231,9 +228,6 @@ export class ProductService {
         );
         throw new Error('Bucket name is missing in env');
       }
-      const coverImg = updateDto.updates.imgFilePath
-        ? this.supabase.getPublicUrl(updateDto.updates.imgFilePath, bucketName)
-        : undefined;
 
       const product = await this.prisma.product.update({
         where: { id: updateDto.productId, organizationId },
@@ -246,7 +240,7 @@ export class ProductService {
           status: updateDto.updates.status,
           isFeatured: updateDto.updates.isFeatured,
           discountedPrice: updateDto.updates.discountedPrice,
-          coverImg,
+          coverImg: updateDto.updates.imgUrl,
         },
       });
       return product;

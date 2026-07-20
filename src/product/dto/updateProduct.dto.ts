@@ -50,7 +50,7 @@ export class UpdateProductFieldsDto {
 
   @IsOptional()
   @IsString()
-  imgFilePath?: string;
+  imgUrl?: string;
 }
 
 export class UpdateProductDto {

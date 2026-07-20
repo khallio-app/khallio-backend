@@ -1,13 +1,24 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
-
-export class DeleteImageDto {
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+export class DeleteProductImageDto {
   @IsString()
   @IsNotEmpty()
-  filePath: string;
-
+  path: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  productId?: string;
+  id?: string;
+}
+
+enum ColumnType {
+  BANNER = 'banner',
+  LOGO = 'logo',
+}
+export class DeleteOrgImageDto {
+  @IsString()
+  @IsNotEmpty()
+  path: string;
+
+  @IsEnum(ColumnType)
+  column: ColumnType;
 }

@@ -22,7 +22,7 @@ export class SupabaseService {
         .replace(/\s+/g, '-') // replace spaces with hyphens
         .replace(/[^a-zA-Z0-9._-]/g, ''); // remove special characters
 
-      const filePath = `cover_images/${Date.now()}-${sanitizedName}`;
+      const filePath = `${Date.now()}-${sanitizedName}`;
 
       const { data, error } = await this.supabase.storage
         .from(bucketName)

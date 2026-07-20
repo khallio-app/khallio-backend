@@ -49,7 +49,7 @@ export class OrganizationController {
     @Body() data: UpdateImageDto,
   ) {
     return await this.organizationService.updateImage(
-      data.path,
+      data.imgUrl,
       data.column,
       session,
       req,

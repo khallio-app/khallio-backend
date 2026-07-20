@@ -6,7 +6,7 @@ enum ColumnType {
 export class UpdateImageDto {
   @IsString()
   @IsNotEmpty()
-  path: string;
+  imgUrl: string;
 
   @IsString()
   @IsEnum(ColumnType)

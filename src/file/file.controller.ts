@@ -3,7 +3,10 @@ import { FileService } from './file.service';
 import { GetUploadUrlDto } from 'src/product/dto/get-upload-url.dto';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { FileDto } from 'src/product/dto/file.dto';
-import { DeleteImageDto } from 'src/product/dto/image.dto';
+import {
+  DeleteOrgImageDto,
+  DeleteProductImageDto,
+} from 'src/product/dto/image.dto';
 import type { Response } from 'express';
 import { CurrentOrg } from 'src/lib/utils/decorators/currentBusiness.decorator';
 
@@ -42,16 +45,29 @@ export class FileController {
   }
 
   @Post(':organizationSlug/image-signedUrl')
-  async imageSignedUrl(@Body() data: { fileName: string }) {
-    return await this.fileService.getImageSignedUrl(data.fileName);
+  async imageSignedUrl(@Body() data: { fileName: string; table: string }) {
+    return await this.fileService.getImageSignedUrl(data.fileName, data.table);
   }
 
-  @Delete('coverImg')
-  async CoverImg(
-    @Body() data: DeleteImageDto,
+  @Delete(':organizationSlug/productImg')
+  async productImg(
+    @Body() data: DeleteProductImageDto,
     @Session() session: UserSession,
     @CurrentOrg() orgId: string,
   ) {
-    return await this.fileService.deleteImage(data, session.user.id, orgId);
+    return await this.fileService.deleteProductImage(
+      data,
+      session.user.id,
+      orgId,
+    );
+  }
+
+  @Delete(':organizationSlug/orgImg')
+  async orgImg(
+    @Body() data: DeleteOrgImageDto,
+    @Session() session: UserSession,
+    @CurrentOrg() orgId: string,
+  ) {
+    return await this.fileService.deleteOrgImage(data, session.user.id, orgId);
   }
 }

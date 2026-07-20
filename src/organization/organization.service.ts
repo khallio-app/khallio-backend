@@ -134,37 +134,27 @@ export class OrganizationService {
   }
 
   async updateImage(
-    path: string,
+    imgUrl: string,
     column: string,
     session: UserSession,
     req: Request,
   ) {
     try {
-      const bucketName = this.config.get<string>('COVER_IMAGE_BUCKET_NAME');
-      if (!bucketName) {
-        this.logger.error(
-          'Bucket name is missing in env',
-          '',
-          'UPDATE_PRODUCT',
-        );
-        throw new Error('Bucket name is missing in env');
-      }
-      const publicUrl = this.supabase.getPublicUrl(path, bucketName);
       switch (column) {
-        case (column = 'banner'):
+        case 'banner':
           auth.api.updateOrganization({
             body: {
               organizationId: session.session.activeOrganizationId,
-              data: { banner: publicUrl },
+              data: { banner: imgUrl },
             },
             headers: req.headers,
           });
           break;
-        case (column = 'logo'):
+        case 'logo':
           auth.api.updateOrganization({
             body: {
               organizationId: session.session.activeOrganizationId,
-              data: { logo: publicUrl },
+              data: { logo: imgUrl },
             },
             headers: req.headers,
           });
