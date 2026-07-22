@@ -95,7 +95,7 @@ export const auth = betterAuth({
     database: { generateId: () => crypto.randomUUID() },
   },
   session: {
-    cookieCache: { enabled: true, maxAge: 50 },
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   logger: {
     level: 'info',
