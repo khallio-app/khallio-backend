@@ -8,6 +8,7 @@ import { emailOTP, organization } from 'better-auth/plugins';
 import { z } from 'zod';
 import { winstonInstance } from '../logger.service';
 import * as crypto from 'crypto';
+import { WalletQueueService } from 'src/queues/wallet/wallet.service';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -20,6 +21,7 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins: [process.env.FRONTEND_URL!],
   rateLimit: { enabled: true },
+
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
@@ -79,6 +81,10 @@ export const auth = betterAuth({
             },
           },
         },
+      },
+
+      organizationHooks: {
+        afterCreateOrganization: async ({ organization, member, user }) => {},
       },
     }),
   ],

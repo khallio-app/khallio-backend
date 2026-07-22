@@ -14,7 +14,7 @@ import { CurrentOrg } from 'src/lib/utils/decorators/currentBusiness.decorator';
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @Post('upload-url')
+  @Post(':organizationSlug/upload-url')
   async getUploadUrl(
     @Body() getUploadUrlDto: GetUploadUrlDto,
     @Res() res: Response,
@@ -27,7 +27,7 @@ export class FileController {
     res.json({ response });
   }
 
-  @Delete('/delete-file')
+  @Delete(':organizationSlug/delete-file')
   async deleteFile(
     @Body() body: { key: string },
     @Session() session: UserSession,
@@ -35,7 +35,7 @@ export class FileController {
     return await this.fileService.deleteFile(body.key, session.user.id);
   }
 
-  @Post('')
+  @Post(':organizationSlug')
   async saveFile(@Body() fileDto: FileDto, @Session() session: UserSession) {
     const response = await this.fileService.createProductFile(
       fileDto,

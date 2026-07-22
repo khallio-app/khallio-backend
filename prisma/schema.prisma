@@ -8,6 +8,47 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum Role {
+  creator
+}
+
+enum ProductStatus {
+  PUBLISHED
+  DRAFT
+}
+
+enum LedgerEntryType {
+  sale
+  payout
+  refund
+  fee
+  adjustment
+}
+
+enum LedgerEntryStatus {
+  pending
+  completed
+  failed
+  reversed
+}
+
+enum CurrencyType {
+  NGN
+  USD
+}
+
+enum WalletStatus {
+  active
+  frozen
+}
+
 model User {
   id        String   @id @unique @default(uuid()) @db.Uuid
   name      String   @db.VarChar(100)
@@ -21,8 +62,9 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  members     Member[]
-  invitations Invitation[]
+  members      Member[]
+  invitations  Invitation[]
+  transactions Transaction[]
 
   @@map("users")
 }
@@ -45,6 +87,7 @@ model Product {
   productFiles    ProductFile[]
   category        Category?     @relation(fields: [categoryId], references: [id])
   organization    Organization  @relation(fields: [organizationId], references: [id])
+  transactions    Transaction[]
 
   @@map("products")
 }
@@ -70,15 +113,6 @@ model Category {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
-}
-
-enum Role {
-  creator
-}
-
-enum ProductStatus {
-  PUBLISHED
-  DRAFT
 }
 
 model Session {
@@ -148,6 +182,7 @@ model Organization {
   banner      String?
   location    String?
   socialLinks String[] @default([])
+  wallets     Wallet[]
 
   @@unique([slug])
   @@map("organization")
@@ -182,4 +217,59 @@ model Invitation {
   @@index([organizationId])
   @@index([email])
   @@map("invitation")
+}
+
+model Transaction {
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String?       @db.Uuid
+  productId        String        @db.Uuid
+  email            String
+  totalAmount      Int
+  currency         String        @default("NGN") @db.VarChar(10)
+  paymentStatus    PaymentStatus @default(pending)
+  paymentReference String        @unique @db.VarChar(100)
+  paymentProvider  String        @db.VarChar(50)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user          User?         @relation(fields: [userId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+  ledgerEntries LedgerEntry[]
+
+  @@map("transactions")
+}
+
+model Wallet {
+  id               String       @id @default(uuid()) @db.Uuid
+  organizationId   String       @db.Uuid
+  availableBalance Int
+  currency         CurrencyType
+  totalEarned      Int
+  totalWithdrawn   Int
+  status           WalletStatus @default(active)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organization  Organization  @relation(fields: [organizationId], references: [id])
+  ledgerEntries LedgerEntry[]
+
+  @@map("wallet")
+}
+
+model LedgerEntry {
+  id            String            @id @default(uuid()) @db.Uuid
+  walletId      String            @db.Uuid
+  type          LedgerEntryType
+  amount        Int
+  balanceAfter  Int
+  transactionId String            @db.Uuid
+  status        LedgerEntryStatus
+  metadata      Json?
+    idempotencyKey String  @unique
+  createdAt     DateTime          @default(now())
+
+  wallet      Wallet      @relation(fields: [walletId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@map("ledger_entries")
 }

@@ -14,8 +14,9 @@ import { auth } from './lib/utils/auth';
 import { OrganizationModule } from './organization/organization.module';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { EmailVerifiedGuard } from './lib/utils/guards/emailVerified.guard';
-import { AllowPublic } from './lib/utils/decorators/allowPublic.decorator';
 import { OrganizationAccessGuard } from './lib/utils/guards/organization.guard';
+import { TransactionModule } from './transaction/transaction.module';
+import { QueuesModule } from './queues/queues.module';
 
 @Module({
   imports: [
@@ -43,12 +44,13 @@ import { OrganizationAccessGuard } from './lib/utils/guards/organization.guard';
 
       inject: [ConfigService],
     }),
-    BullModule.registerQueue({ name: 'email' }),
+    QueuesModule,
     ProductModule,
     CategoryModule,
     EmailModule,
     FileModule,
     OrganizationModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [

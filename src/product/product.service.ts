@@ -79,7 +79,18 @@ export class ProductService {
   ) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId, organizationId },
-      include: { category: true, productFiles: true },
+      include: {
+        category: true,
+        productFiles: true,
+        organization: {
+          select: {
+            name: true,
+            description: true,
+            logo: true,
+            products: { where: { isFeatured: true } },
+          },
+        },
+      },
     });
     if (!product) {
       this.logger.error(
@@ -107,7 +118,17 @@ export class ProductService {
   async findByPublicId(publicId: string) {
     const product = await this.prisma.product.findUnique({
       where: { publicId, status: 'PUBLISHED' },
-      include: { category: true },
+      include: {
+        category: true,
+        organization: {
+          select: {
+            name: true,
+            description: true,
+            logo: true,
+            products: { where: { isFeatured: true } },
+          },
+        },
+      },
       omit: {
         isFeatured: true,
         createdAt: true,
@@ -127,6 +148,7 @@ export class ProductService {
       where: {
         organizationId: product.organizationId,
         status: 'PUBLISHED',
+        isFeatured: true,
         publicId: { not: publicId },
       },
       select: { coverImg: true, price: true, name: true, publicId: true },
