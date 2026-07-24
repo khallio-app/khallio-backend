@@ -86,7 +86,7 @@ model Product {
   coverImg        String?
   productFiles    ProductFile[]
   category        Category?     @relation(fields: [categoryId], references: [id])
-  organization    Organization  @relation(fields: [organizationId], references: [id])
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   transactions    Transaction[]
 
   @@map("products")
@@ -233,7 +233,7 @@ model Transaction {
   updatedAt        DateTime      @updatedAt
 
   user          User?         @relation(fields: [userId], references: [id])
-  product       Product       @relation(fields: [productId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
   ledgerEntries LedgerEntry[]
 
   @@map("transactions")
@@ -250,25 +250,25 @@ model Wallet {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  organization  Organization  @relation(fields: [organizationId], references: [id])
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   ledgerEntries LedgerEntry[]
 
   @@map("wallet")
 }
 
 model LedgerEntry {
-  id            String            @id @default(uuid()) @db.Uuid
-  walletId      String            @db.Uuid
-  type          LedgerEntryType
-  amount        Int
-  balanceAfter  Int
-  transactionId String            @db.Uuid
-  status        LedgerEntryStatus
-  metadata      Json?
-    idempotencyKey String  @unique
-  createdAt     DateTime          @default(now())
+  id             String            @id @default(uuid()) @db.Uuid
+  walletId       String            @db.Uuid
+  type           LedgerEntryType
+  amount         Int
+  balanceAfter   Int
+  transactionId  String            @db.Uuid
+  status         LedgerEntryStatus
+  metadata       Json?
+  idempotencyKey String            @unique
+  createdAt      DateTime          @default(now())
 
-  wallet      Wallet      @relation(fields: [walletId], references: [id])
+  wallet      Wallet      @relation(fields: [walletId], references: [id], onDelete: Cascade)
   transaction Transaction @relation(fields: [transactionId], references: [id])
 
   @@map("ledger_entries")

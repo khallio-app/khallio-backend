@@ -45,11 +45,13 @@ export class OrganizationService {
 
   async getActiveOrg(session: UserSession, req: Request) {
     try {
-      const activeOrg = await auth.api.getFullOrganization({
-        query: { organizationId: session.session.activeOrganizationId },
-        headers: req.headers,
-      });
-      return activeOrg;
+        const activeOrg = await auth.api.getFullOrganization({
+          query: { organizationId: session.session.activeOrganizationId },
+          headers: req.headers,
+        });
+        if (activeOrg) {
+          return activeOrg;
+        }
     } catch (error) {
       this.logger.warn(
         `User(${session.user.id}) has no active organizations: ` +
