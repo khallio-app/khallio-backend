@@ -114,7 +114,7 @@ export class FileService {
     }
   }
 
-  async deleteFile(key: string, userId: string) {
+  async deleteFile(userId: string, key: string) {
     try {
       if (!key) {
         this.logger.warn(
@@ -130,6 +130,8 @@ export class FileService {
       });
 
       await this.s3.s3Client.send(command);
+
+      await this.prisma.productFile.delete({ where: { key } });
 
       return { message: 'File deleted successfully' };
     } catch (err) {

@@ -95,6 +95,8 @@ export class ProductService {
     if (!product) {
       this.logger.error(
         `Product ${productId} not found on business(${organizationId}) by user(${userId})`,
+        '',
+        'FIND_BY_PRODUCT_ID',
       );
       throw new NotFoundException('Product not found');
     }
@@ -103,7 +105,11 @@ export class ProductService {
 
   async findFeaturedProduct(organizationId: string, userId: string) {
     const products = await this.prisma.product.findMany({
-      where: { organizationId, isFeatured: true },
+      where: {
+        organizationId,
+        isFeatured: true,
+        organization: { members: { some: { userId, role: 'owner' } } },
+      },
       include: { category: true },
     });
     if (!products) {
@@ -183,7 +189,9 @@ export class ProductService {
         name: createProductDto.name,
         shortDesc: createProductDto.shortDesc,
         fullDesc: createProductDto.fullDesc,
-        categoryId: createProductDto.categoryId,
+        categoryId: createProductDto.categoryId
+          ? createProductDto.categoryId
+          : null,
         price: createProductDto.price,
         discountedPrice: createProductDto.discountedPrice,
         status: createProductDto.status,
@@ -265,6 +273,24 @@ export class ProductService {
           coverImg: updateDto.updates.imgUrl,
         },
       });
+
+      if (updateDto.updates.productFileIds) {
+        updateDto.updates.productFileIds.forEach(async (i) => {
+          try {
+            await this.prisma.productFile.update({
+              where: { id: i },
+              data: { productId: product.id },
+            });
+          } catch (err) {
+            this.logger.error(
+              `Failed to update productId on file on user(${userId}) - ProductFile(${i}): ` +
+                err.message,
+              '',
+              'CREATE_PRODUCT',
+            );
+          }
+        });
+      }
       return product;
     } catch (err) {
       this.logger.error(

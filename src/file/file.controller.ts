@@ -32,7 +32,10 @@ export class FileController {
     @Body() body: { key: string },
     @Session() session: UserSession,
   ) {
-    return await this.fileService.deleteFile(body.key, session.user.id);
+    return await this.fileService.deleteFile(
+      session.user.id,
+      body.key,
+    );
   }
 
   @Post(':organizationSlug')

@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsInt,
   IsNotEmpty,
@@ -27,7 +28,6 @@ export class UpdateProductFieldsDto {
   @IsString()
   status?: ProductStatus;
 
-
   @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
@@ -36,7 +36,6 @@ export class UpdateProductFieldsDto {
   @Type(() => Number)
   @IsInt()
   price?: number;
-
 
   @IsOptional()
   @Type(() => Number)
@@ -51,6 +50,10 @@ export class UpdateProductFieldsDto {
   @IsOptional()
   @IsString()
   imgUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  productFileIds: string[];
 }
 
 export class UpdateProductDto {

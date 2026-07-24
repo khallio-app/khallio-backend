@@ -88,15 +88,37 @@ export const auth = betterAuth({
       },
     }),
   ],
+  session: {
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
+  },
+
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const org = await prisma.organization.findFirst({
+            where: {
+              members: { some: { userId: session.userId, role: 'owner' } },
+            },
+          });
+
+          return {
+            data: {
+              ...session,
+              activeOrganizationId: org?.id || null,
+            },
+          };
+        },
+      },
+    },
+  },
 
   advanced: {
     crossSubDomainCookies: { enabled: true },
     crossOrigin: true,
     database: { generateId: () => crypto.randomUUID() },
   },
-  session: {
-    cookieCache: { enabled: true, maxAge: 5 * 60 },
-  },
+
   logger: {
     level: 'info',
     log: (level, message, ...args) => {
