@@ -36,8 +36,9 @@ import { QueuesModule } from './queues/queues.module';
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         connection: {
-          host: config.get<string>('REDIS_HOST'),
-          port: Number(config.get<string>('REDIS_PORT')),
+          host: config.get<string>('REDISHOST'),
+          port: Number(config.get<string>('REDISPORT')),
+          password: config.get<string>('REDISPASSWORD') || undefined
         },
         defaultJobOptions: { attempts: 3 },
       }),
