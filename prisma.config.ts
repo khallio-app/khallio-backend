@@ -15,7 +15,7 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    // url: process.env["DATBASE_URL"],
-    url: 'postgresql://khallio:localdevpassword@localhost:5432/khallio_dev',
+    url: process.env["DATABASE_URL"],
+    // url: 'postgresql://khallio:localdevpassword@localhost:5432/khallio_dev',
   },
 });
