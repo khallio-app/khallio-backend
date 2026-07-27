@@ -28,7 +28,6 @@ export class OrganizationService {
           },
         },
       });
-
       return ownedOrgs;
     } catch (error) {
       this.logger.error(
@@ -45,52 +44,27 @@ export class OrganizationService {
 
   async getActiveOrg(session: UserSession, req: Request) {
     try {
-        const activeOrg = await auth.api.getFullOrganization({
-          query: { organizationId: session.session.activeOrganizationId },
-          headers: req.headers,
-        });
-        if (activeOrg) {
-          return activeOrg;
-        }
+      const activeOrg = await this.prisma.organization.findFirst({
+        where: {
+          id: session.session.activeOrganizationId,
+          members: {
+            some: {
+              userId: session.user.id,
+              role: 'owner',
+              user: { emailVerified: true },
+            },
+          },
+        },
+        include: {
+          members: { where: { userId: session.user.id, role: 'owner' } },
+        },
+      });
+      return activeOrg;
     } catch (error) {
       this.logger.warn(
         `User(${session.user.id}) has no active organizations: ` +
           error.message,
         'GET_ACTIVE_ORGANIZATIONS',
-      );
-    }
-  }
-
-  async isUserOrgOwner(session: UserSession) {
-    try {
-      if (session.session.activeOrganizationId) {
-        const owner = await this.prisma.organization.findFirst({
-          where: {
-            id: session.session.activeOrganizationId,
-            members: {
-              some: {
-                userId: session.user.id,
-                role: 'owner',
-              },
-            },
-          },
-        });
-        if (!owner) return { isOwner: false };
-        return { isOwner: true };
-      } else {
-        return { isOwner: false };
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error fetching organization(${session.session.activeOrganizationId}) owner: ` +
-          error.message,
-        '',
-        'GET_ORG_OWNER',
-      );
-      throw new HttpException(
-        `Error fetching organization(${session.session.activeOrganizationId}) owner: ` +
-          error.message,
-        error.status || 500,
       );
     }
   }

@@ -36,10 +36,6 @@ export class OrganizationController {
     return await this.organizationService.getActiveOrg(session, req);
   }
 
-  @Get('isOwner')
-  async isUserOrgOwner(@Session() session: UserSession) {
-    return await this.organizationService.isUserOrgOwner(session);
-  }
 
   @UseGuards(EmailVerifiedGuard, OrganizationAccessGuard)
   @Put(':organizationSlug/image')

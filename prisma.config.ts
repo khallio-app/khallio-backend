@@ -16,6 +16,5 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["DATABASE_URL"],
-    // url: 'postgresql://khallio:localdevpassword@localhost:5432/khallio_dev',
   },
 });
