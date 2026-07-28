@@ -16,7 +16,7 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
 import { EmailVerifiedGuard } from './lib/utils/guards/emailVerified.guard';
 import { OrganizationAccessGuard } from './lib/utils/guards/organization.guard';
 import { TransactionModule } from './transaction/transaction.module';
-import { QueuesModule } from './queues/queues.module';
+// import { QueuesModule } from './queues/queues.module';
 
 @Module({
   imports: [
@@ -45,7 +45,7 @@ import { QueuesModule } from './queues/queues.module';
 
       inject: [ConfigService],
     }),
-    QueuesModule,
+    // QueuesModule,
     ProductModule,
     CategoryModule,
     EmailModule,
