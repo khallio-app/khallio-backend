@@ -28,8 +28,9 @@ export const auth = betterAuth({
         const { Queue } = await import('bullmq');
         const emailQueue = new Queue('email', {
           connection: {
-            host: process.env.REDIS_HOST,
-            port: Number(process.env.REDIS_PORT),
+            host: process.env.REDISHOST,
+            port: Number(process.env.REDISPORT),
+            password: process.env.REDISPASSWORD || undefined,
           },
         });
         await emailQueue.add(
